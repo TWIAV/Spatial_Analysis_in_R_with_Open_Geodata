@@ -1,0 +1,108 @@
+---
+header-includes:
+   - \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
+   - \usepackage[skins]{tcolorbox}
+   - \usepackage{multicol}
+   - \usepackage{graphicx}
+   - \usepackage{lastpage}
+   - \usepackage{fancyhdr}
+   - \pagestyle{fancy}
+   - \fancyhf{}
+   - \lhead{Use of R in Official Statistics - uRos2018}
+   - \rhead{6th international conference, The Hague, September 2018}
+   - \usepackage[numbered]{bookmark}
+   - \usepackage{hyperref}
+   - \hypersetup{
+     pdftitle={Tutorial - Spatial Analysis in R with Open Geodata - uRos2018},
+     pdfauthor={Egge-Jan Pollé and Willy Tadema}
+     }
+   - \hypersetup{linkcolor = {blue}, urlcolor = {blue}}
+   - \renewcommand{\footrulewidth}{0.4pt}
+   - \fancyfoot{}
+   - \fancyfoot[l]{\titletxt}
+   - \fancyfoot[r]{Page \thepage\ of \pageref*{LastPage}}
+   - \usepackage{fvextra}
+   - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+   - \usepackage{xcolor}
+   - \definecolor{grey}{rgb}{0.8,0.8,0.8}
+output: 
+  pdf_document:
+    latex_engine: lualatex
+mainfont: Calibri
+urlcolor: blue
+---
+
+
+\newpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
+```
+
+\huge Tutorial - Spatial Analysis in R with Open Geodata
+
+\normalsize
+
+**Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
+**Willy Tadema** - Provincie Groningen[^2]
+
+Version 0.0.1 - July 24, 2018
+
+\begin{multicols}{2}
+
+\subsection{Introduction}
+
+
+This is the manual for a tutorial session to be delivered on Wednesday 12 September 2018 at the 6\textsuperscript{th} International \href{https://www.aanmelder.nl/uros2018}{Conference on the Use of R in Official Statistics (uRos2018)} at the Dutch Office for National Statistics (\href{https://www.cbs.nl/en-gb}{CBS}) in the Hague.
+
+\subsection{Prerequisites}
+
+\begin{itemize}
+  \item Attendees should bring their own laptop with (64-bit) \href{https://www.r-project.org/}{R}, and preferably also \href{https://www.rstudio.com/}{RStudio}, installed.
+  \item Shortly before the training session we will publish a list of additional packages (e.g. \textbf{sf}, \textbf{mapview} and \textbf{tmap}) to be installed - please keep an eye on our \href{https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata}{GitHub repository}.
+  \item No specific prior experience (with R) is required for this introductory session, though some basic experience in one or more of the following fields is certainly helpful: Data Science, Programming/Software Development and/or GIS.
+\end{itemize}
+
+\end{multicols}
+
+[^1]: https://www.linkedin.com/in/ejhpolle/
+[^2]: https://www.linkedin.com/in/willytadema/
+
+##Course material available on GitHub
+
+The URL of this repository: [https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata](https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata)
+
+\newpage
+\newpage
+\pdfbookmark{\contentsname}{toc}
+\hypersetup{linkcolor=black}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+\tableofcontents
+\hypersetup{linkcolor=blue}
+\newpage
+
+# Web Feature Service
+
+
+```{r}
+library(sf)
+library(mapview)
+
+baseurl <- "https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?"
+wfs_request <- "request=GetFeature&service=WFS&version=2.0.0"
+type_name <- "&typeName=bevolkingskernen2011:cbsbevolkingskernen2011"
+output_format <- "&outputFormat=application/json"
+
+nl_human_settlements_wfs <- paste0(baseurl,wfs_request,type_name,output_format)
+
+nl_human_settlements <- st_read(nl_human_settlements_wfs)
+
+```
+\newpage
+
+```{r}
+
+plot(st_geometry(nl_human_settlements), col = "orange", border = "red")
+
+```
