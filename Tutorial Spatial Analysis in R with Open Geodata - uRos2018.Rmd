@@ -82,7 +82,117 @@ The URL of this repository: [https://github.com/TWIAV/Spatial_Analysis_in_R_with
 \hypersetup{linkcolor=blue}
 \newpage
 
-# Web Feature Service
+# Managing Geospatial Vector Data in R {-}  
+
+# The package `sf` (Simple Features for R)
+
+To manage spatial data in R you will use the library `sf`, a relativle new addition to the R universe. The package was [released on CRAN in January 2017](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran).
+
+This package provides support for simple features, which is a standardized way to encode spatial vector data.
+
+`sf` links directly to three important geospatial libraries, to unlock their power for use in R:
+
+* GDAL for reading and writing data
+* GEOS for geometrical operations
+* Proj.4 for projection conversions and datum transformations.
+
+**The package `sf` on CRAN:**  
+[https://cran.r-project.org/web/packages/sf/index.html](https://cran.r-project.org/web/packages/sf/index.html)
+
+
+If the package is not yet installed, you can install it with the following command:
+
+```{r install_sf, eval = FALSE}
+install.packages("sf")
+```
+
+To be able to manage your spatial data you will first have to load the package `sf`:
+
+```{r library_sf}
+library(sf)
+```
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=The real geospatial powers behind sf]
+\begin{itemize}
+\item GDAL: the \textbf{Geospatial Data Abstraction Library} is a translator library for raster and vector geospatial data formats. Website: \url{http://www.gdal.org/}
+\item GEOS: the \textbf{Geometry Engine, Open Source} contains the complete functionality of the OpenGIS Simple Features for SQL spatial predicate functions and spatial operators. Website: \url{https://trac.osgeo.org/geos}
+\item Proj.4: \textbf{PROJ} is a generic coordinate transformation software, that transforms coordinates from one coordinate reference system (CRS) to another. This includes cartographic projections as well as geodetic transformations. Website: \url{http://proj4.org/}
+\end{itemize}
+\end{tcolorbox}
+
+# A first exercise
+
+```{r}
+ap <- "Lelystad Airport"
+cd <- "LEY"
+class(cd)
+lat <- 52.460278
+lon <- 5.527222
+class(lon)
+airport <- data.frame(ap,cd,lat,lon, stringsAsFactors = FALSE)
+NL_Airports <- read.csv("http://www.twiav.nl/files/NL_Airports.csv", stringsAsFactors = FALSE)
+
+head(NL_Airports)
+
+```
+```{r, eval = FALSE}
+NL_Airports <- rbind(NL_Airports, airport) # This will give an error
+```
+```{r}
+names(airport) <- names(NL_Airports)
+
+NL_Airports <- rbind(NL_Airports, airport)
+
+class(NL_Airports)
+
+library(sf)
+
+NL_Airports <- st_as_sf(NL_Airports, coords = c("longitude","latitude"), crs = 4326)
+
+class(NL_Airports)
+
+plot(st_geometry(NL_Airports), pch = 17)
+
+```
+
+\newpage
+
+# Interactive Viewing of Spatial Data in R
+
+Until now you have seen some static maps plotted o the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing.
+
+In this chapter we will look at some of these.
+
+## The package `mapview`
+
+**The package `mapview` on CRAN:**  
+[https://cran.r-project.org/web/packages/mapview/index.html](https://cran.r-project.org/web/packages/mapview/index.html)
+
+If the package is not yet installed, you can install it with the following command:
+
+```{r install_mv, eval = FALSE}
+install.packages("mapview")
+```
+
+To be able to view your spatial data interactively you will first have to load the package `mapview`:
+
+```{r library_mv}
+library(mapview)
+```
+
+
+\newpage
+
+# Accessing Geospatial Vector Data over the Internet {-}
+
+# OGC Web Feature Service (WFS)
+
+In this chapter you will learn how to use R as a client to access data using a Web Feature Service (WFS). WFS is a Data Access Standard which is defined and maintained by the Open Geospatial Consortium (OGC). The WFS Interface Standard defines a set of interfaces for accessing geographic information over the Internet. It offers the means to retrieve geographic features and their properties in a manner independent of the underlying data stores they publish.
+
+The standard is used - both in the public and private sector and in the academic world - to publish vector geospatial datasets in a way that makes it easier for receiving organisations to compile new maps or conduct analysis on the supplied data.
+
+
 
 
 ```{r}
@@ -102,7 +212,31 @@ nl_human_settlements <- st_read(nl_human_settlements_wfs)
 \newpage
 
 ```{r}
-
 plot(st_geometry(nl_human_settlements), col = "orange", border = "red")
-
 ```
+
+## Further reading
+
+The OGC offers an official tutorial module - [OGC E-learning](http://cite.opengeospatial.org/pub/cite/files/edu/index.html) - covering it's activities and the several standards it maintains. The [specific chapter on WFS](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html) can be found [here](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html).
+
+\newpage
+
+# Esri ArcGIS Online
+
+\newpage
+
+# References {-}
+
+* **Pebesma, Edzer** (January 3, 2017). *Simple Features Now on CRAN*. Blog. Retreived from: [https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran)
+
+
+\newpage
+
+# Appendix A: List of abbreviations used {-}
+
+Abbreviation | Meaning
+-------------|----------
+CRAN | Comprehensive R Archive Network
+GIS | Geographic Information System
+OGC | Open Geospatial Consortium
+WFS | Web Feature Service
