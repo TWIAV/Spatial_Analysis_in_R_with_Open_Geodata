@@ -46,7 +46,7 @@ knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.0.1 - July 24, 2018
+Version 0.0.2 - July 27, 2018
 
 \begin{multicols}{2}
 
@@ -186,15 +186,19 @@ library(mapview)
 
 # Accessing Geospatial Vector Data over the Internet {-}
 
-# OGC Web Feature Service (WFS)
+# OGC Web Feature Service (WFS) \label{chapWFS}
 
 ## Introduction
 
-In this chapter you will learn how **to use R as a client to access data using a Web Feature Service (WFS)**. WFS is a Data Access Standard which is defined and maintained by the Open Geospatial Consortium (OGC). The WFS Interface Standard defines a set of interfaces for accessing geographic information over the Internet. It offers the means to retrieve geographic features and their properties through a highly configurable interface and in a manner independent of the underlying data stores they publish.
+\begin{multicols}{2}
+
+In this chapter you will learn how \textbf{to use R as a client to access data using a Web Feature Service (WFS)}. WFS is a Data Access Standard which is defined and maintained by the Open Geospatial Consortium (OGC). The WFS Interface Standard defines a set of interfaces for accessing geographic information over the Internet. It offers the means to retrieve geographic features and their properties through a highly configurable interface and in a manner independent of the underlying data stores they publish.
 
 The standard is used - both in the public and private sector and in the academic world - to publish vector geospatial datasets in a way that makes it easy for receiving organisations to conduct analysis on the data supplied.
 
-In a short chapter like this it will not be possible to cover all ins and outs of the WFS Interface Standard. The main goal here is to get you up and running and to whetten your appetite for more. It might all look a bit technical and intimidating at first, but as soon as you have the syntax of your request right, you will be able to retrieve valuable spatial data in the blink of an eye. 
+In a short chapter like this it will not be possible to cover all ins and outs of the WFS Interface Standard. The main goal here is to get you up and running and to whetten your appetite for more. It might all look a bit technical and intimidating at first, but as soon as you have the syntax of your request right, you will be able to retrieve valuable spatial data in the blink of an eye.
+
+\end{multicols}
 
 ## WFS Outputformat: GML vs. GeoJSON \label{gmlGEOJSON}
 
@@ -208,7 +212,7 @@ In general **GDAL**, the translator library behind the `sf` functions `st_read()
 
 So, in the exercises in this manual, when accessing a WFS service o retrieve data, we will always add the parameter `outputFormat=application/json`.
 
-## How to access a WFS service? `request=GetCapabilities` \label{GCnl}
+## Access a WFS service: `request=GetCapabilities` \label{GCnl}
 
 In general, organisations publishing data using WFS, will provide you with a URL to their WFS server which also contains a `GetCapabilities` reguest. Once you know the **capabilities** of the service (i.e. once you know what is on offer) you can start building your own request to the server.
 
@@ -223,7 +227,9 @@ When you click this link the server response will be shown in your browser in XM
 
 We are not going to study this XML response line-by-line. Not now. But please leave the web page open in your browser for later reference.
 
-## Retrieving data from a WFS service: `request=GetFeature`\label{GFnl}
+## Retrieve data from a WFS service: `request=GetFeature` \label{GetFeaturePar}
+
+### `request=GetFeature` - an example from the Netherlands \label{GFnl}
 
 A WFS server responding to a *GetFeature* request returns a collection of geographic feature instances filtered according to a criteria set by the requesting client.
 
@@ -231,23 +237,23 @@ We will start with a simple request to download a full feature collection withou
 
 In the script below we have chosen to store the different parts of our request in separate variables, only to concatenate them at the end to get the full URL. We do so for readability reasons and to allow for easy modification of our request at a later stage if necessary.
 
-A WFS service can offer one or more feature collections. The `typenames` parameter determines the collection of feature instances to return. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
+A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapalities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
 
-What we are intersted in here, is the municipal division for the year 2017. After some browsing through the XML response to our `GetCapalities` request, we have found a `FeatureType` with the `Name` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter.
+What we are intersted in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
 
 Aslso, do not forget to add a parameter to ask for output in GeoJSON format (as discussed in paragraph \ref{gmlGEOJSON}).
 
 This is the script to populate the full request:
 
 ```{r}
-wfs_baseurl = "https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?"
-wfs_service = "service=WFS"
-wfs_version = "version=2.0.0"
-wfs_request = "request=GetFeature"
-wfs_typename = "typename=cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd"
-wfs_outputformat = "outputFormat=application/json"
+wfs_baseurl <- "https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?"
+wfs_service <- "service=WFS"
+wfs_version <- "version=2.0.0"
+wfs_request <- "request=GetFeature"
+wfs_typename <- "typename=cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd"
+wfs_outputformat <- "outputFormat=application/json"
 
-wfs_fullurl = paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
+wfs_fullurl <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
 print(wfs_fullurl)
 
 ```
@@ -275,7 +281,7 @@ head(NL_Municipalities2017)
 ```
 \newpage
 
-## Additional Exercise: an example from Finland
+### `request=GetFeature` - an example from Finland
 
 
 In this paragraph we will retrieve data from [Tilastokeskus (Statistics Finland)](http://www.stat.fi/). In the english section of their website we found a nice dataset: [Population by municipality-based units](http://www.stat.fi/org/avoindata/paikkatietoaineistot/vaesto_tilastointialueittain_en.html).
@@ -286,30 +292,27 @@ And from this map it is especially the layer \textbf{Population 2017 by municipa
 
 We will follow the same steps as in the Dutch example above. For an explanation of the steps taken, please refer to paragraph \ref{GCnl} and \ref{GFnl}.
 
-The URL with `GetCapabilities` request is:   
-
-
 \includegraphics{Images/tklogo_fi.png}
 
 \end{multicols}
 
-
+The URL with `GetCapabilities` request is:  
 [http://geo.stat.fi/geoserver/vaestoalue/wfs?request=GetCapabilities](http://geo.stat.fi/geoserver/vaestoalue/wfs?request=GetCapabilities)
 
-In this XML response we have found a `FeatureType` with the `Name` **vaestoalue:kunta_vaki2017**. That's the value we are giving to the `typename` parameter.
+In this XML response - in the `<FeatureTypeList>` section - we have found a `<FeatureType>` with the `<Name>` **vaestoalue:kunta_vaki2017**. That's the value we are giving to the `typename` parameter.
 
 The script to populate te full URL is similar to the one before - the only variables we have modified are `wfs_baseurl` and `wfs_typename`:
 
 ```{r}
 # FI: Example with Finnish data
-wfs_baseurl = "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
-wfs_service = "service=WFS"
-wfs_version = "version=2.0.0"
-wfs_request = "request=GetFeature"
-wfs_typename = "typename=vaestoalue:kunta_vaki2017"
-wfs_outputformat = "outputFormat=application/json"
+wfs_baseurl <- "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
+wfs_service <- "service=WFS"
+wfs_version <- "version=2.0.0"
+wfs_request <- "request=GetFeature"
+wfs_typename <- "typename=vaestoalue:kunta_vaki2017"
+wfs_outputformat <- "outputFormat=application/json"
 
-wfs_fullurl = paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
+wfs_fullurl <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
 print(wfs_fullurl)
 
 ```
@@ -333,11 +336,7 @@ Have a look at the result:
 qtm(FI_Municipalities2018_Pop2017)
 ```
 
-Optionally, you can have a look at the attribute data in the **Data Viewer**:
-
-```{r eval = FALSE}
-View(FI_Municipalities2018_Pop2017)
-```
+Optionally, you can have a look at the attribute data in the **Data Viewer**: `View(FI_Municipalities2018_Pop2017)`
 
 \begin{multicols}{2}
 
@@ -346,9 +345,10 @@ With some basic knowledge of the Finnish language you should now be able to calc
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
 \begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=Finnish for Data Scientists: some useful words]
 \begin{itemize}
-\item \textbf{Vaesto} = Population
 \item \textbf{Miehet} = Men
 \item \textbf{Naiset} = Women
+\item \textbf{Nimi} = Name
+\item \textbf{Vaesto} = Population
 \end{itemize}
 \end{tcolorbox}
 
@@ -360,47 +360,54 @@ sum(FI_Municipalities2018_Pop2017$miehet)
 sum(FI_Municipalities2018_Pop2017$naiset)
 ```
 
-
 \newpage
 
+## Get a description of a dataset: `request=DescribeFeatureType`
 
+In the previous exercises we immediately executed `GetFeature` requests to WFS services - mainly because the trainer told us to do so - without actually knowing anything about these datasets.
 
+To get a description of the dataset, you can execute a `DescribeFeatureType` request first. This returns a description - in XML format - of the structure, including properties, of the feature type specified in the request.
 
+For the Dutch municipalities dataset this request would look like this:
+[https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd](https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd)
 
+And for the Finnish dataset like this:
+[http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=vaestoalue:kunta_vaki2017](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=vaestoalue:kunta_vaki2017)
 
+## Some additional parameters to the `GetFeature` request
 
-## Exercise
+Additional parameters can be added to a `GetFeature` request to further filter or convert the response from the WFS.
 
+To include additional parameters to a request, simply add an *ampersand* (&) at the end of the URL, then add the name of the parameter, an equal sign (=) and the value to assign to the parameter.
 
+Below we will discuss a few of the parameters available.
 
+### Limit the number of records returned: the `count` parameter
 
+To have a look at the structure of a dataset - before retrieving the full dataset - you can choose to limit the number of records returned with the `count` parameter.
 
-
-
-
-
-
-
+The `GetFeature` request below limits the number of Finnish municipalities returned to only 5:
 
 ```{r}
-library(sf)
-library(mapview)
+# FI: Example with Finnish data
+wfs_baseurl <- "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
+wfs_service <- "service=WFS"
+wfs_version <- "version=2.0.0"
+wfs_request <- "request=GetFeature"
+wfs_typename <- "typename=vaestoalue:kunta_vaki2017"
+wfs_count <- "count=5"
+wfs_outputformat <- "outputFormat=application/json"
 
-baseurl <- "https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?"
-wfs_request <- "request=GetFeature&service=WFS&version=2.0.0"
-type_name <- "&typeName=bevolkingskernen2011:cbsbevolkingskernen2011"
-output_format <- "&outputFormat=application/json"
-
-nl_human_settlements_wfs <- paste0(baseurl,wfs_request,type_name,output_format)
-
-nl_human_settlements <- st_read(nl_human_settlements_wfs)
+wfs_fullurl_w_count <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_count,"&",wfs_outputformat)
+print(wfs_fullurl_w_count)
 
 ```
+The variable `wfs_fullurl_w_count` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&count=5&outputFormat=application/json). (When you click this link the server response will be shown in your
+browser in GeoJSON format.)
+
+
+
 \newpage
-
-```{r}
-plot(st_geometry(nl_human_settlements), col = "orange", border = "red")
-```
 
 ## Further reading
 
@@ -425,5 +432,65 @@ Abbreviation | Meaning
 -------------|----------
 CRAN | Comprehensive R Archive Network
 GIS | Geographic Information System
+GML | Geography Markup Language
+JSON | JavaScript Object Notation
 OGC | Open Geospatial Consortium
 WFS | Web Feature Service
+XML | eXtensible Markup Language
+
+\newpage
+
+# Appendix B: Additional exercises {-}
+
+## OGC Web Feature Service (WFS) {-}
+
+For background information on the steps taken in the exercise below, please refer to chapter \ref{chapWFS}
+
+### `request=GetFeature` - another example from the Netherlands {-}
+
+In this additional exercise we will access a WFS service offering information about *bevolkingskernen* (urban human settlements) in the Netherlands in 2011. More information on this dataset can be found here: [Dataset: CBS Bevolkingskernen](https://www.pdok.nl/introductie?articleid=1951745).
+
+The URL with `GetCapabilities` request is:  
+[https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?request=GetCapabilities](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?request=GetCapabilities)
+
+In the `<FeatureTypeList>` section of this XML response we can see that this service only offers one `<FeatureType>`, i.e. one dataset. This dataset has the `<Name>` **bevolkingskernen2011:cbsbevolkingskernen2011**. That's the value we are giving to the `typename` parameter in our `GetFeature` request.
+
+
+The URL with `DescribeFeatureType` request is:  
+[https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=bevolkingskernen2011:cbsbevolkingskernen2011](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=bevolkingskernen2011:cbsbevolkingskernen2011)
+
+This dataset does contain quite some attribute columns!
+
+This is the script to populate the full `GetFeature` request:
+
+```{r}
+# NL: Urban Human Settlement Analysis
+wfs_baseurl <- "https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?"
+wfs_service <- "service=WFS"
+wfs_version <- "version=2.0.0"
+wfs_request <- "request=GetFeature"
+wfs_typename <- "typename=bevolkingskernen2011:cbsbevolkingskernen2011"
+wfs_outputformat <- "outputFormat=application/json"
+
+wfs_fullurl <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
+print(wfs_fullurl)
+
+```
+The variable `wfs_fullurl` will now contain this [link](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011:cbsbevolkingskernen2011&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+
+Now we want to feed this response directly into R, like this:
+
+```{r}
+library(sf)
+
+NL_Urban_Human_Settlements2011 <- st_read(wfs_fullurl)
+```
+
+
+
+\newpage
+
+```{r}
+plot(st_geometry(NL_Urban_Human_Settlements2011), col = "orange", border = "red")
+```
+
