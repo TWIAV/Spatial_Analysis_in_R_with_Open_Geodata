@@ -130,10 +130,10 @@ class(cd)
 lat <- 52.460278
 lon <- 5.527222
 class(lon)
-airport <- data.frame(ap,cd,lat,lon, stringsAsFactors = FALSE)
+airport <- data.frame(ap, cd, lat, lon, stringsAsFactors = FALSE)
 NL_Airports <- read.csv("http://www.twiav.nl/files/NL_Airports.csv", stringsAsFactors = FALSE)
 
-head(NL_Airports)
+print(NL_Airports)
 
 ```
 ```{r, eval = FALSE}
@@ -143,7 +143,7 @@ NL_Airports <- rbind(NL_Airports, airport) # This will give an error
 names(airport) <- names(NL_Airports)
 
 NL_Airports <- rbind(NL_Airports, airport)
-
+print(NL_Airports)
 class(NL_Airports)
 
 library(sf)
