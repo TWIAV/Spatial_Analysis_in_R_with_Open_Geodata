@@ -362,7 +362,7 @@ sum(FI_Municipalities2018_Pop2017$naiset)
 
 \newpage
 
-## Get a description of a dataset: `request=DescribeFeatureType`
+## Get a description of a dataset: `request=DescribeFeatureType` \label{parDescFeatType}
 
 In the previous exercises we immediately executed `GetFeature` requests to WFS services - mainly because the trainer told us to do so - without actually knowing anything about these datasets.
 
@@ -402,10 +402,31 @@ wfs_fullurl_w_count <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_r
 print(wfs_fullurl_w_count)
 
 ```
-The variable `wfs_fullurl_w_count` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&count=5&outputFormat=application/json). (When you click this link the server response will be shown in your
-browser in GeoJSON format.)
+The variable `wfs_fullurl_w_count` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&count=5&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
+\newpage
 
+### Limit the number of rows returned: the `PropetyName` parameter
+
+To restrict a `GetFeature` request by attribute rather than feature, use the `PropertyName` parameter. You can specify a single attribute, or multiple attributes separated by commas.
+
+The `GetFeature` request below only returns the geometry and the columns *nimi* (Name) and *vaesto* (total population) for the Finnish municipalities:
+
+```{r}
+# FI: Example with Finnish data
+wfs_baseurl <- "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
+wfs_service <- "service=WFS"
+wfs_version <- "version=2.0.0"
+wfs_request <- "request=GetFeature"
+wfs_typename <- "typename=vaestoalue:kunta_vaki2017"
+wfs_propertyname <- "propertyname=geom,nimi,vaesto"
+wfs_outputformat <- "outputFormat=application/json"
+
+wfs_fullurl_w_properties <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_propertyname,"&",wfs_outputformat)
+print(wfs_fullurl_w_properties)
+
+```
+The variable `wfs_fullurl_w_properties` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&propertyname=geom,nimi,vaesto&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
