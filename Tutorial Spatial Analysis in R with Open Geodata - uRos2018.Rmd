@@ -2,6 +2,7 @@
 header-includes:
    - \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
    - \usepackage[skins]{tcolorbox}
+   - \usepackage{float}
    - \usepackage{multicol}
    - \usepackage{graphicx}
    - \usepackage{lastpage}
@@ -25,6 +26,8 @@ header-includes:
    - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
    - \usepackage{xcolor}
    - \definecolor{grey}{rgb}{0.8,0.8,0.8}
+   - \usepackage{enumitem}
+   - \renewcommand{\figurename}{Figure}
 output: 
   pdf_document:
     latex_engine: lualatex
@@ -437,6 +440,71 @@ The OGC offers an official tutorial module - [OGC E-learning](http://cite.openge
 \newpage
 
 # Esri ArcGIS Online
+
+\begin{multicols}{2}
+
+\href{https://developers.arcgis.com/rest/}{ArcGIS REST API}
+
+\href{https://livingatlas.arcgis.com/en/}{ArcGIS Living Atlas of the World}
+
+Some background information on the Living Atlas of the World can be found in this \href{http://www.esri.com/esri-news/arcuser/summer-2015/welcome-to-the-living-atlas-of-the-world}{article}, where Esri also invites YOU to \textit{"Become a user and a contibutor"}.
+
+
+
+\includegraphics{Images/living-atlas-logo-size-4.png}
+
+\end{multicols}
+
+\newpage
+
+## Exploring the data in ArcGIS Online
+
+Once you have found a nice (and open) dataset in the Living Atlas, you can click to proceed to an overview page with metadata. For the dataset we have chosen - the **Feature Layer** *Les communes en France 2018* - this overview page can be found via this [link](https://www.arcgis.com/home/item.html?id=a3325fff0a3343e0becb44bf27317970#overview) (see Figure \ref{FR_Com18_AGOL_Metadata}). 
+
+In [Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=a3325fff0a3343e0becb44bf27317970)
+
+\newpage
+
+\begin{figure}[H]
+\centering
+\caption{On the overview page metadata about \textbf{Feature Layer} \textit{Les communes en France 2018} is presented}
+\vspace{5pt}
+\includegraphics{Images/Feature_Layer_Communes_France_2018_Metadata.png}
+\label{FR_Com18_AGOL_Metadata}
+\end{figure}
+\begin{figure}[H]
+\centering
+\caption{Here the \textbf{Feature Layer} \textit{Les communes en France 2018} is shown in the \textbf{ArcGIS Online Map Viewer}}
+\vspace{5pt}
+\includegraphics{Images/Feature_Layer_Communes_France_2018_Map_Viewer.png}
+\label{FR_Com18_AGOL_MapViewer}
+\end{figure}
+
+\newpage
+
+## Query the Feature Service
+
+[https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0](https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0)
+
+[https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0/query](https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0/query)
+
+\newpage
+
+\begin{figure}[H]
+\centering
+\caption{On this page the \textbf{Feature Layer} \textit{COMMUNE} is presented in the \textbf{ArcGIS REST Services Directory}}
+\vspace{5pt}
+\includegraphics{Images/ArcGIS_REST_Services_Directory_Commune_FeatureServer.png}
+\label{FR_Com18_AG_REST_Services_Dir}
+\end{figure}
+\begin{figure}[H]
+\centering
+\caption{On this page you can enter parameters to query the \textbf{Feature Layer} \textit{COMMUNE}}
+\vspace{5pt}
+\includegraphics{Images/ArcGIS_REST_Services_Directory_Commune_FeatureServer_query.png}
+\label{FR_Com18_AG_REST_Services_Dir_Query}
+\end{figure}
+
 
 \newpage
 
