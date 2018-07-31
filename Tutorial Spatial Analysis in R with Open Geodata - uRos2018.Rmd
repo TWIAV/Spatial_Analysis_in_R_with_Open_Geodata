@@ -49,7 +49,7 @@ knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.0.2 - July 27, 2018
+Version 0.1.0 - July 31, 2018
 
 \begin{multicols}{2}
 
@@ -189,13 +189,99 @@ library(mapview)
 
 # Accessing Geospatial Vector Data over the Internet {-}
 
+# Downloadable shapefiles
+
+\begin{multicols}{2}
+
+In this chapter we will learn how to download, to unzip and to load shapefiles \textbf{using R}. There will be no need to use your web browser, your file explorer or a zip utility - the whole process can be completed using just a few lines of R code.
+
+The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapfile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consits of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
+
+\includegraphics{Images/cbs.png}
+
+The shapefile format has been developed by \href{https://www.esri.com/}{Esri} and over the years has become a \textit{de facto} standard for data interoperability among Esri and other GIS software products.
+
+It is not uncommon for public organizations - including national statistical institutes - to distribute geographic information in this shapefile format. So, you will find shapefiles on the \href{https://www.cbs.nl/nl-nl/dossier/nederland-regionaal/geografische-data}{page with geographic data of the Dutch Office for National Statistics (CBS)} and also on the \href{http://data.statistik.gv.at/web/catalog.jsp}{STATISTIK AUSTRIA open.data Portal}.
+
+\includegraphics{Images/logo_statistik.png}
+
+\end{multicols}
+
+## Download and unzip the shapefile
+
+```{r eval=FALSE}
+# Set the working directory
+setwd("C:/uRos2018")
+# Store the URL to the file to download in a variable
+URL2zip <- "http://data.statistik.gv.at/data/OGDEXT_GEM_1_STATISTIK_AUSTRIA_20180101.zip"
+print(URL2zip)
+# Extract the filename from this URL
+zip_file <- file.path(basename(URL2zip))
+print(zip_file)
+# Create a subfolder in your working directory to store the data
+dir.create("./Data", showWarnings = FALSE)
+# store the path to the current working directory in a variable
+workdir <- getwd()
+# switch to the data folder you just created
+setwd("./Data")
+# Download the file
+download.file(URL2zip, destfile = zip_file, mode = "wb")
+# unzip the file
+unzip(zip_file)
+# after unzipping you can delete (i.e. unlink) the file
+unlink(zip_file)
+# Return to the original working directory
+setwd(workdir)
+# remove variables you do not longer need
+rm(URL2zip,zip_file,workdir)
+```
+
+```{r echo=FALSE}
+setwd("C:/uRos2018")
+URL2zip <- "http://data.statistik.gv.at/data/OGDEXT_GEM_1_STATISTIK_AUSTRIA_20180101.zip"
+zip_file <- file.path(basename(URL2zip))
+dir.create("C:/uRos2018/Data", showWarnings = FALSE)
+setwd("C:/uRos2018/Data")
+download.file(URL2zip, destfile = zip_file, mode = "wb")
+unzip(zip_file)
+unlink(zip_file)
+setwd("C:/uRos2018")
+```
+
+## Load the shapefile
+
+
+```{r eval=FALSE}
+library(sf)
+library(tmap)
+AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
+```
+
+```{r echo=FALSE}
+library(sf)
+library(tmap)
+AUSTRIA_GEM_20180101 <- st_read("C:/uRos2018/Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
+```
+
+```{r eval=FALSE}
+qtm(AUSTRIA_GEM_20180101)
+```
+
+```{r echo=FALSE}
+qtm(AUSTRIA_GEM_20180101)
+```
+
+
+
+\newpage
+
 # OGC Web Feature Service (WFS) \label{chapWFS}
 
 ## Introduction
 
 \begin{multicols}{2}
 
-In this chapter you will learn how \textbf{to use R as a client to access data using a Web Feature Service (WFS)}. WFS is a Data Access Standard which is defined and maintained by the Open Geospatial Consortium (OGC). The WFS Interface Standard defines a set of interfaces for accessing geographic information over the Internet. It offers the means to retrieve geographic features and their properties through a highly configurable interface and in a manner independent of the underlying data stores they publish.
+In this chapter we will learn how \textbf{to use R as a client to access data using a Web Feature Service (WFS)}. WFS is a Data Access Standard which is defined and maintained by the Open Geospatial Consortium (OGC). The WFS Interface Standard defines a set of interfaces for accessing geographic information over the Internet. It offers the means to retrieve geographic features and their properties through a highly configurable interface and in a manner independent of the underlying data stores they publish.
 
 The standard is used - both in the public and private sector and in the academic world - to publish vector geospatial datasets in a way that makes it easy for receiving organisations to conduct analysis on the data supplied.
 
