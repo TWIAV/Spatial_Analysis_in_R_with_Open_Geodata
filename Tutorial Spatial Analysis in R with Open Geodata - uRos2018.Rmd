@@ -49,7 +49,7 @@ knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.1.0 - July 31, 2018
+Version 0.1.9 - August 1, 2018
 
 \begin{multicols}{2}
 
@@ -324,7 +324,7 @@ A WFS server responding to a *GetFeature* request returns a collection of geogra
 
 We will start with a simple request to download a full feature collection without any constraints to filter the content by. The GetFeature request queries the server with a set of parameters, which are concatenated to the URL with an *ampersand* (&).
 
-In the script below we have chosen to store the different parts of our request in separate variables, only to concatenate them at the end to get the full URL. We do so for readability reasons and to allow for easy modification of our request at a later stage if necessary.
+In the script below we use the `httr` package. This allows us to store the different parameters of our request in a list, only to build the full URL at the end. We do so for readability reasons and to allow for easy modification of our request at a later stage if necessary. And the function `build_url()` will return a properly encoded URL.
 
 A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapalities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
 
@@ -335,27 +335,28 @@ Aslso, do not forget to add a parameter to ask for output in GeoJSON format (as 
 This is the script to populate the full request:
 
 ```{r}
-wfs_baseurl <- "https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?"
-wfs_service <- "service=WFS"
-wfs_version <- "version=2.0.0"
-wfs_request <- "request=GetFeature"
-wfs_typename <- "typename=cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd"
-wfs_outputformat <- "outputFormat=application/json"
+# NL: Example with Dutch data
+library(sf)
+library(tmap)
+library(httr)
 
-wfs_fullurl <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
-print(wfs_fullurl)
-
+url <- parse_url("geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?")
+url$scheme <- "https"
+url$query<- list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                 outputFormat = "application/json")
+request <- build_url(url)
+print(request)
 ```
 
-The variable `wfs_fullurl` will now contain this [link](https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https:///geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=cbsgebiedsindelingen%3Acbs_gemeente_2017_gegeneraliseerd&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
 ```{r}
-library(sf)
-library(tmap)
-
-NL_Municipalities2017 <- st_read(wfs_fullurl)
+NL_Municipalities2017 <- st_read(request)
 ```
 
 \newpage
@@ -390,32 +391,32 @@ The URL with `GetCapabilities` request is:
 
 In this XML response - in the `<FeatureTypeList>` section - we have found a `<FeatureType>` with the `<Name>` **vaestoalue:kunta_vaki2017**. That's the value we are giving to the `typename` parameter.
 
-The script to populate te full URL is similar to the one before - the only variables we have modified are `wfs_baseurl` and `wfs_typename`:
+The script to build the full URL is similar to the one before - the only parameters we have modified are the url and the typename:
 
 ```{r}
 # FI: Example with Finnish data
-wfs_baseurl <- "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
-wfs_service <- "service=WFS"
-wfs_version <- "version=2.0.0"
-wfs_request <- "request=GetFeature"
-wfs_typename <- "typename=vaestoalue:kunta_vaki2017"
-wfs_outputformat <- "outputFormat=application/json"
+library(sf)
+library(tmap)
+library(httr)
 
-wfs_fullurl <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
-print(wfs_fullurl)
+url <- parse_url("geo.stat.fi/geoserver/vaestoalue/wfs?")
+url$scheme <- "https"
+url$query<- list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "vaestoalue:kunta_vaki2017",
+                 outputFormat = "application/json")
+request <- build_url(url)
+print(request)
 
 ```
 
-The variable `wfs_fullurl` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https:///geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
 ```{r}
-library(sf)
-library(tmap)
-
-FI_Municipalities2018_Pop2017 <- st_read(wfs_fullurl)
-
+FI_Municipalities2018_Pop2017 <- st_read(request)
 ```
 \newpage
 
@@ -467,7 +468,7 @@ And for the Finnish dataset like this:
 
 Additional parameters can be added to a `GetFeature` request to further filter or convert the response from the WFS.
 
-To include additional parameters to a request, simply add an *ampersand* (&) at the end of the URL, then add the name of the parameter, an equal sign (=) and the value to assign to the parameter.
+To include additional parameters to a request, simply add an *ampersand* (&) at the end of the URL, then add the name of the parameter, an equal sign (=) and the value to assign to the parameter. Of course we will not do this manually; we will use the `httr` package to build this URL with additional parameters for us.
 
 Below we will discuss a few of the parameters available.
 
@@ -479,19 +480,21 @@ The `GetFeature` request below limits the number of Finnish municipalities retur
 
 ```{r}
 # FI: Example with Finnish data
-wfs_baseurl <- "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
-wfs_service <- "service=WFS"
-wfs_version <- "version=2.0.0"
-wfs_request <- "request=GetFeature"
-wfs_typename <- "typename=vaestoalue:kunta_vaki2017"
-wfs_count <- "count=5"
-wfs_outputformat <- "outputFormat=application/json"
+library(httr)
 
-wfs_fullurl_w_count <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_count,"&",wfs_outputformat)
-print(wfs_fullurl_w_count)
+url <- parse_url("geo.stat.fi/geoserver/vaestoalue/wfs?")
+url$scheme <- "https"
+url$query<- list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "vaestoalue:kunta_vaki2017",
+                 count = 5,
+                 outputFormat = "application/json")
+request <- build_url(url)
+print(request)
 
 ```
-The variable `wfs_fullurl_w_count` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&count=5&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `reques` will now contain this [link](https:///geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&count=5&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
@@ -503,19 +506,21 @@ The `GetFeature` request below only returns the geometry and the columns *nimi* 
 
 ```{r}
 # FI: Example with Finnish data
-wfs_baseurl <- "http://geo.stat.fi/geoserver/vaestoalue/wfs?"
-wfs_service <- "service=WFS"
-wfs_version <- "version=2.0.0"
-wfs_request <- "request=GetFeature"
-wfs_typename <- "typename=vaestoalue:kunta_vaki2017"
-wfs_propertyname <- "propertyname=geom,nimi,vaesto"
-wfs_outputformat <- "outputFormat=application/json"
+library(httr)
 
-wfs_fullurl_w_properties <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_propertyname,"&",wfs_outputformat)
-print(wfs_fullurl_w_properties)
+url <- parse_url("geo.stat.fi/geoserver/vaestoalue/wfs?")
+url$scheme <- "https"
+url$query<- list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "vaestoalue:kunta_vaki2017",
+                 propertyname = "geom,nimi,vaesto",
+                 outputFormat = "application/json")
+request <- build_url(url)
+print(request)
 
 ```
-The variable `wfs_fullurl_w_properties` will now contain this [link](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue:kunta_vaki2017&propertyname=geom,nimi,vaesto&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https:///geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
@@ -623,7 +628,7 @@ For background information on the steps taken in the exercise below, please refe
 
 ### `request=GetFeature` - another example from the Netherlands {-}
 
-In this additional exercise we will access a WFS service offering information about *bevolkingskernen* (urban human settlements) in the Netherlands in 2011. More information on this dataset can be found here: [Dataset: CBS Bevolkingskernen](https://www.pdok.nl/introductie?articleid=1951745).
+In this additional exercise we will access a WFS service offering information about *bevolkingskernen* (human settlements) in the Netherlands in 2011. More information on this dataset can be found here: [Dataset: CBS Bevolkingskernen](https://www.pdok.nl/introductie?articleid=1951745).
 
 The URL with `GetCapabilities` request is:  
 [https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?request=GetCapabilities](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?request=GetCapabilities)
@@ -636,36 +641,38 @@ The URL with `DescribeFeatureType` request is:
 
 This dataset does contain quite some attribute columns!
 
-This is the script to populate the full `GetFeature` request:
+This is the script to build the full `GetFeature` request:
 
 ```{r}
-# NL: Urban Human Settlement Analysis
-wfs_baseurl <- "https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?"
-wfs_service <- "service=WFS"
-wfs_version <- "version=2.0.0"
-wfs_request <- "request=GetFeature"
-wfs_typename <- "typename=bevolkingskernen2011:cbsbevolkingskernen2011"
-wfs_outputformat <- "outputFormat=application/json"
+# NL: Human Settlement Analysis
+library(sf)
+library(tmap)
+library(httr)
 
-wfs_fullurl <- paste0(wfs_baseurl, wfs_service,"&",wfs_version,"&",wfs_request,"&",wfs_typename,"&",wfs_outputformat)
-print(wfs_fullurl)
+url <- parse_url("geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?")
+url$scheme <- "https"
+url$query<- list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "bevolkingskernen2011:cbsbevolkingskernen2011",
+                 outputFormat = "application/json")
+request <- build_url(url)
+print(request)
+
+
 
 ```
-The variable `wfs_fullurl` will now contain this [link](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011:cbsbevolkingskernen2011&outputFormat=application/json). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https:///geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011%3Acbsbevolkingskernen2011&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
 ```{r}
-library(sf)
-
-NL_Urban_Human_Settlements2011 <- st_read(wfs_fullurl)
+NL_Human_Settlements2011 <- st_read(request)
 ```
-
-
 
 \newpage
 
 ```{r}
-plot(st_geometry(NL_Urban_Human_Settlements2011), col = "orange", border = "red")
+plot(st_geometry(NL_Human_Settlements2011), col = "orange", border = "red")
 ```
 
