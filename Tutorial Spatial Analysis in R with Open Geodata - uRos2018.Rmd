@@ -550,50 +550,93 @@ Some background information on the Living Atlas of the World can be found in thi
 
 ## Exploring the data in ArcGIS Online
 
-Once you have found a nice (and open) dataset in the Living Atlas, you can click to proceed to an overview page with metadata. For the dataset we have chosen - the **Feature Layer** *Les communes en France 2018* - this overview page can be found via this [link](https://www.arcgis.com/home/item.html?id=a3325fff0a3343e0becb44bf27317970#overview) (see Figure \ref{FR_Com18_AGOL_Metadata}). 
+Once you have found a nice (and open) dataset in the Living Atlas, you can click to proceed to an overview page with metadata. For the dataset we have chosen - the **Feature Layer** *USA States (Generalized)* - this overview page can be found via this [link](https://www.arcgis.com/home/item.html?id=99fd67933e754a1181cc755146be21ca#overview) (see Figure \ref{USA_States_AGOL_Metadata}). 
 
-In [Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=a3325fff0a3343e0becb44bf27317970)
+In [Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=99fd67933e754a1181cc755146be21ca)
 
 \newpage
 
 \begin{figure}[H]
 \centering
-\caption{On the overview page metadata about \textbf{Feature Layer} \textit{Les communes en France 2018} is presented}
+\caption{On the overview page metadata about \textbf{Feature Layer} \textit{USA States (Generalized)} is presented}
 \vspace{5pt}
-\includegraphics{Images/Feature_Layer_Communes_France_2018_Metadata.png}
-\label{FR_Com18_AGOL_Metadata}
+\includegraphics{Images/Feature_Layer_USA_States_Metadata.png}
+\label{USA_States_AGOL_Metadata}
 \end{figure}
 \begin{figure}[H]
 \centering
-\caption{Here the \textbf{Feature Layer} \textit{Les communes en France 2018} is shown in the \textbf{ArcGIS Online Map Viewer}}
+\caption{Here the \textbf{Feature Layer} \textit{USA States (Generalized)} is shown in the \textbf{ArcGIS Online Map Viewer}}
 \vspace{5pt}
-\includegraphics{Images/Feature_Layer_Communes_France_2018_Map_Viewer.png}
-\label{FR_Com18_AGOL_MapViewer}
+\includegraphics{Images/Feature_Layer_USA_States_Map_Viewer.png}
+\label{USA_States_AGOL_MapViewer}
 \end{figure}
 
 \newpage
 
 ## Query the Feature Service
 
-[https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0](https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0)
+[https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0)
 
-[https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0/query](https://services.arcgis.com/d3voDfTFbHOCRwVR/arcgis/rest/services/COMMUNE/FeatureServer/0/query)
+[https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query)
+
+
+```{r}
+# USA: An example with American data
+library(sf)
+library(tmap)
+library(httr)
+
+url <- parse_url("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?")
+url$scheme <- "https"
+url$query<- list(where = "1=1",
+                 outFields = "*",
+                 returnGeometry = "true",
+                 f = "geojson")
+request <- build_url(url)
+print(request)
+```
+
+
+
+```{r}
+USA_States_2017 <- st_read(request)
+```
+
+\newpage
+
+```{r}
+qtm(USA_States_2017)
+```
+
+
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=Anchorage]
+"Hey Chel you know it's kinda funny\\
+ Texas always seems so big\\
+ But you know you're in the largest State in the Union\\
+ When you're anchored down in Anchorage"\\
+\\ 
+ \textbf{Michelle Shocked} - Short Sharp Shocked - 1988
+\end{tcolorbox}
+
+
 
 \newpage
 
 \begin{figure}[H]
 \centering
-\caption{On this page the \textbf{Feature Layer} \textit{COMMUNE} is presented in the \textbf{ArcGIS REST Services Directory}}
+\caption{On this page the \textbf{Feature Layer} \textit{USA\_States\_Generalized} is presented in the \textbf{ArcGIS REST Services Directory}}
 \vspace{5pt}
-\includegraphics{Images/ArcGIS_REST_Services_Directory_Commune_FeatureServer.png}
-\label{FR_Com18_AG_REST_Services_Dir}
+\includegraphics{Images/ArcGIS_REST_Services_Directory_USA_States_FeatureServer.png}
+\label{USA_States_AG_REST_Services_Dir}
 \end{figure}
 \begin{figure}[H]
 \centering
-\caption{On this page you can enter parameters to query the \textbf{Feature Layer} \textit{COMMUNE}}
+\caption{On this page you can enter parameters to query the \textbf{Feature Layer} \textit{USA\_States\_Generalized}}
 \vspace{5pt}
-\includegraphics{Images/ArcGIS_REST_Services_Directory_Commune_FeatureServer_query.png}
-\label{FR_Com18_AG_REST_Services_Dir_Query}
+\includegraphics{Images/ArcGIS_REST_Services_Directory_USA_States_FeatureServer_query.png}
+\label{USA_States_AG_REST_Services_Dir_Query}
 \end{figure}
 
 
@@ -601,6 +644,7 @@ In [Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&lay
 
 # References {-}
 
+* **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
 * **Pebesma, Edzer** (January 3, 2017). *Simple Features Now on CRAN*. Blog. Retreived from: [https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran)
 
 
