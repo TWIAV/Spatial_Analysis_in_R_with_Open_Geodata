@@ -464,7 +464,7 @@ For the Dutch municipalities dataset this request would look like this:
 And for the Finnish dataset like this:
 [http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=vaestoalue:kunta_vaki2017](http://geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=DescribeFeatureType&typename=vaestoalue:kunta_vaki2017)
 
-## Some additional parameters to the `GetFeature` request
+## Additional parameters to the `GetFeature` request
 
 Additional parameters can be added to a `GetFeature` request to further filter or convert the response from the WFS.
 
@@ -498,7 +498,7 @@ The variable `reques` will now contain this [link](https:///geo.stat.fi/geoserve
 
 \newpage
 
-### Limit the number of rows returned: the `PropetyName` parameter
+### Limit the number of columns returned: the `PropetyName` parameter
 
 To restrict a `GetFeature` request by attribute rather than feature, use the `PropertyName` parameter. You can specify a single attribute, or multiple attributes separated by commas.
 
@@ -530,35 +530,9 @@ The OGC offers an official tutorial module - [OGC E-learning](http://cite.openge
 
 \newpage
 
-# Esri ArcGIS Online
-
-\begin{multicols}{2}
-
-\href{https://developers.arcgis.com/rest/}{ArcGIS REST API}
-
-\href{https://livingatlas.arcgis.com/en/}{ArcGIS Living Atlas of the World}
-
-Some background information on the Living Atlas of the World can be found in this \href{http://www.esri.com/esri-news/arcuser/summer-2015/welcome-to-the-living-atlas-of-the-world}{article}, where Esri also invites YOU to \textit{"Become a user and a contibutor"}.
-
-
-
-\includegraphics{Images/living-atlas-logo-size-4.png}
-
-\end{multicols}
-
-\newpage
-
-## Exploring the data in ArcGIS Online
-
-Once you have found a nice (and open) dataset in the Living Atlas, you can click to proceed to an overview page with metadata. For the dataset we have chosen - the **Feature Layer** *USA States (Generalized)* - this overview page can be found via this [link](https://www.arcgis.com/home/item.html?id=99fd67933e754a1181cc755146be21ca#overview) (see Figure \ref{USA_States_AGOL_Metadata}). 
-
-In [Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=99fd67933e754a1181cc755146be21ca)
-
-\newpage
-
 \begin{figure}[H]
 \centering
-\caption{On the overview page metadata about \textbf{Feature Layer} \textit{USA States (Generalized)} is presented}
+\caption{On the overview page metadata about the \textbf{Feature Layer} \textit{USA States (Generalized)} is presented}
 \vspace{5pt}
 \includegraphics{Images/Feature_Layer_USA_States_Metadata.png}
 \label{USA_States_AGOL_Metadata}
@@ -573,53 +547,42 @@ In [Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&lay
 
 \newpage
 
+# ArcGIS REST Service
+
+## Introduction
+
+\begin{multicols}{2}
+
+In this chapter we will learn how \textbf{to use R as a client to access data using an ArcGIS REST Service}. We will be accessing ArcGIS Server to retrieve Feature Layers using the \href{https://developers.arcgis.com/rest/}{ArcGIS REST API}. This API is part of ArcGIS Online,  the "complete SaaS mapping platform" by the American GIS company \href{https://www.esri.com/en-us/home}{Esri}. And as part of this platform Esri has launched the \href{https://livingatlas.arcgis.com/en/}{ArcGIS Living Atlas of the World}\footnote{Some background information on the Living Atlas of the World can be found in this \href{http://www.esri.com/esri-news/arcuser/summer-2015/welcome-to-the-living-atlas-of-the-world}{article}, where Esri also invites YOU to \textit{"Become a user and a contibutor"}.}
+
+Some datasets in this Living Atlas are Open Data. Some, but by no means all, as many datasets are only accessible via an ArcGIS Online organizational account. But in cases where the source data is already Open Data, Esi publishes the data under the same conditions.
+
+\includegraphics{Images/living-atlas-logo-size-4.png}
+
+\end{multicols}
+
+## Exploring data in the ArcGIS Living Atlas of the World
+
+Afer some browsing through the content of the Living Atlas we have found a nice (and open) dataset for this exercise: the **Feature Layer** *USA States (Generalized)*. An overview page with metadata for the dataset we have chosen can be found via this [link](https://www.arcgis.com/home/item.html?id=99fd67933e754a1181cc755146be21ca#overview) (see Figure \ref{USA_States_AGOL_Metadata}). 
+
+Before actually importing the data into R, you can expore the dataset - both the geometry and the attribute data - in the [ArcGIS Online Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=99fd67933e754a1181cc755146be21ca) (see Figure \ref{USA_States_AGOL_MapViewer}).
+
 ## Query the Feature Service
+
+On the overview page we have found the Service URL pointing to the layer **USA_States_Generalized** in the the Services Directory (see Figure \ref{USA_States_AG_REST_Services_Dir}): 
 
 [https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0)
 
+One of the **Supported Operations** for this layer is **Query**. The *Query* page (see Figure \ref{USA_States_AG_REST_Services_Dir_Query}) offers an interface to construct the query: 
+
 [https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query)
 
+Let's try to build a request to retrieve the full dataset:
 
-```{r}
-# USA: An example with American data
-library(sf)
-library(tmap)
-library(httr)
-
-url <- parse_url("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?")
-url$scheme <- "https"
-url$query<- list(where = "1=1",
-                 outFields = "*",
-                 returnGeometry = "true",
-                 f = "geojson")
-request <- build_url(url)
-print(request)
-```
-
-
-
-```{r}
-USA_States_2017 <- st_read(request)
-```
-
-\newpage
-
-```{r}
-qtm(USA_States_2017)
-```
-
-
-
-\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
-\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=Anchorage]
-"Hey Chel you know it's kinda funny\\
- Texas always seems so big\\
- But you know you're in the largest State in the Union\\
- When you're anchored down in Anchorage"\\
-\\ 
- \textbf{Michelle Shocked} - Short Sharp Shocked - 1988
-\end{tcolorbox}
-
+* The first parameter is `where`. It is obligatory and cannot be ommited. If there is no *where-clause* (i.e. if you want to extract the full dataset) you have to populate this parameter with the value `1=1` (which is - of course - always true...)
+* To get all the attribute columns you to give the parameter `outFields` the value `*`
+* To retrieve the spatial data the parameter `returnGeomatry` should be set to `true`
+* And the outputformat - `f` - is set to `geojson`
 
 
 \newpage
@@ -642,6 +605,103 @@ qtm(USA_States_2017)
 
 \newpage
 
+This is the script to populate the full request:
+
+```{r}
+# USA: An example with American data
+library(sf)
+library(tmap)
+library(httr)
+
+url <- parse_url(paste0("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/","USA_States_Generalized/FeatureServer/0/query?"))
+url$scheme <- "https"
+url$query<- list(where = "1=1",
+                 outFields = "*",
+                 returnGeometry = "true",
+                 f = "geojson")
+request <- build_url(url)
+print(request)
+```
+
+The variable `request` will now contain this [link](https:///services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=%2A&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+
+Now we want to feed this response directly into R, like this:
+
+```{r}
+USA_States_2017 <- st_read(request)
+```
+
+\newpage
+
+Have a look at the result:
+
+```{r}
+qtm(USA_States_2017)
+```
+
+
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=Anchorage]
+"Hey Chel you know it's kinda funny\\
+ Texas always seems so big\\
+ But you know you're in the largest State in the Union\\
+ When you're anchored down in Anchorage"\\
+\\ 
+ \textbf{Michelle Shocked} - Short Sharp Shocked - 1988
+\end{tcolorbox}
+
+\newpage
+
+## Additional parameters to the `query` request
+
+### Filter the records returned: specify the `where`-clause
+
+To filter records you can specify a `where`-clause.
+
+The `query` request below only returns those States which have more than 10 million inhabitants:
+
+```{r}
+# USA: An example with American data
+library(httr)
+
+url <- parse_url(paste0("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/","USA_States_Generalized/FeatureServer/0/query?"))
+url$scheme <- "https"
+url$query<- list(where = "POPULATION>10000000",
+                 outFields = "STATE_NAME,POPULATION",
+                 returnGeometry = "true",
+                 f = "geojson")
+request <- build_url(url)
+print(request)
+```
+
+The variable `request` will now contain this [link](https:///services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=POPULATION%3E10000000&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+
+
+### Limit the number of columns returned: the `outFields` parameter
+
+If you do not need all attribute columns of a dataset in your analysis, you can limit the number of columns returned by specifyng the `outFields` parameter. You can specify a single attribute, or multiple attributes separated by commas.
+
+The `query` request below only returns the geometry and the columns STATE_NAME and POPULATION for the United States:
+
+```{r}
+# USA: An example with American data
+library(httr)
+
+url <- parse_url(paste0("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/","USA_States_Generalized/FeatureServer/0/query?"))
+url$scheme <- "https"
+url$query<- list(where = "1=1",
+                 outFields = "STATE_NAME,POPULATION",
+                 returnGeometry = "true",
+                 f = "geojson")
+request <- build_url(url)
+print(request)
+```
+
+The variable `request` will now contain this [link](https:///services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+
+\newpage
+
 # References {-}
 
 * **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
@@ -654,11 +714,14 @@ qtm(USA_States_2017)
 
 Abbreviation | Meaning
 -------------|----------
+API | application programming interface
 CRAN | Comprehensive R Archive Network
 GIS | Geographic Information System
 GML | Geography Markup Language
 JSON | JavaScript Object Notation
 OGC | Open Geospatial Consortium
+REST | Representational State Transfer
+SaaS | software as a service
 WFS | Web Feature Service
 XML | eXtensible Markup Language
 
