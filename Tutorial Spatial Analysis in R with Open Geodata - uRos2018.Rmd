@@ -702,6 +702,257 @@ The variable `request` will now contain this [link](https:///services.arcgis.com
 
 \newpage
 
+# Statistics Netherlands (CBS) StatLine databank as open data
+
+\begin{multicols}{2}
+
+All tables in the \href{https://opendata.cbs.nl/statline/portal.html?_la=en&_catalog=CBS}{Statistics Netherlands (CBS) StatLine databank} are available as open data. Since 2014 this databank has an open data web API based on the OData protocol (\url{https://www.odata.org/}).
+
+Using web services, data can be retrieved, filtered and combined. In this way, Statistics Netherlands aims to promote the widespread use of its statistical data.
+
+In this chapter we will load Dutch statistical data directly into R, using the package `cbsodataR`, the Statistics Netherlands (CBS) Open Data API Client for R.
+
+\includegraphics{Images/cbs.png}
+
+\end{multicols}
+
+## the package `cbsodataR`
+
+The package `cbsodaataR` can be found on CRAN: [https://cran.r-project.org/package=cbsodataR](https://cran.r-project.org/package=cbsodataR)
+
+The table of contents can be retrieved with the fucnction `cbs_get_toc()`. As we browse through the table of content we do see a total of 4418 entries. For most datasets all the metadata is in Dutch, but for some of them this information is also available in English.
+
+When we split the TOC by language we do see that currently 698 datasets are available with metadata in English. These 'English' datasets are actually copies of their Dutch equivalents. (Maybe overtime all tables will be available with a description in English?)
+
+This is a wealth of information, and all these datasets can be directly loaded into R. In the next paragraph we will do some exercises with one particular table.
+
+```{r}
+library(cbsodataR)
+
+toc <- cbs_get_toc()
+nrow(toc)
+toc_nl <- cbs_get_toc(Language="nl")
+nrow(toc_nl)
+toc_en <- cbs_get_toc(Language="en")
+nrow(toc_en)
+
+```
+
+\newpage
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=NUTS - Nomenclature des Unités Territoriales Statistiques]
+\href{http://ec.europa.eu/eurostat/web/main/home}{Eurostat} uses a set of geospatial classifications, but the heart of these is NUTS:  the \textbf{Nomenclature of Territorial Units for Statistics}.\\
+This classification was set up by Eurostat at the beginning of the 1970s. It serves as a single, coherent system for dividing up the EU's territory in order to produce regional statistics for the European Union.\\
+\\
+Ther are three levels of NUTS regions:
+\begin{itemize}
+\item{NUTS 1: major socio-economic regions}
+\item{NUTS 2: basic regions for the application of regional policies}
+\item{NUTS 3: small regions for specific diagnoses}
+\end{itemize}
+
+\includegraphics{Images/Eurostat_logo.png}
+More information on the NUTS classification can be found here: \url{http://ec.europa.eu/eurostat/web/nuts/background}\\
+\\
+Eurostat even created a nice video on the topic: \url{https://youtu.be/a4Y-hCQ-Klo}
+\end{tcolorbox}
+
+## NUTS regions in the Netherlands: exercises with regional statistical data
+
+### Preparing the data
+
+The table we have chosen for the exercises in this paragraph is called 'Regionale kerncijfers Nederland', i.e. Regeional statistical data about the Netherlands.
+The identifier of this table is **70072ned**. It is a huge table containing data at 5 regional levels - from the country as a whole down to the municipal level - from 1995 up to the current year.
+
+The table can be retrieved with the fucnction `cbs_get_data()`:
+
+```{r eval=FALSE}
+NL_Regional_Statistics2017 <- cbs_get_data('70072ned')
+```
+
+As we do not need the full table, we will limit the amount of data loaded.
+
+Firstly, we are only interested in the year 2017. We want to analyse the total population by region for that particular year.
+
+So, we come up with the following statement (we will explain the selection of columns below):
+
+```{r, message = FALSE, warning = FALSE}
+library(dplyr)
+library(data.table)
+library(stringr)
+```
+
+```{r}
+NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% select(RegioS,Perioden,TotaleBevolking_1,Code_291,Naam_292,Code_293,Naam_294)
+```
+
+The first two columns - `RegioS` and `Perioden` - are categorical columns, i.e. they contain codes. The labels for these columns can be added with the function `cbs_add_label_columns()`:
+
+```{r}
+NL_Regional_Statistics2017 <- NL_Regional_Statistics2017 %>% cbs_add_label_columns()
+```
+
+We will now rename the columns of our table for further use in the exercise:
+
+```{r}
+names(NL_Regional_Statistics2017) <- c("Regional_level","Regional_level_label","Year","Year_label","Total_population","Region_code","Region_name","Province_code","Province_name")
+```
+Each column has a label. To avoid issues later on in this exercise, we will remove these labels now:
+
+```{r}
+for (i in names(NL_Regional_Statistics2017)) {
+  attr(NL_Regional_Statistics2017[[deparse(as.name(i))]], "label") <- NULL
+}
+```
+
+Let's have a first look at the table:
+
+```{r}
+head(NL_Regional_Statistics2017)
+
+```
+
+In the first row we can see the total number of inhabitants in the Netherlands on January 1st, 2017, which is: *17,081,507*.
+
+And wait, we notice something else: some columns seem to have a fixed width. For example, the columns `Regional_level` and  `Region_name`:
+
+```{r}
+paste(NL_Regional_Statistics2017$Regional_level[1])
+paste(NL_Regional_Statistics2017$Region_name[6])
+```
+```{r}
+my_string <- paste(NL_Regional_Statistics2017$Region_name[6])
+nchar(my_string)
+```
+This is weird, isn't it? The string 'Noord-Nederland' - which is only 15 charaters in length - is filled out with trailing spaces to have a length of 50... This can't be good, can it? We want our strings to behave like strings with their proper length, not carrying around a trail of whitespaces.
+
+Let's fix this issue with the function `trimws()` for the columns concerned:
+
+```{r}
+NL_Regional_Statistics2017$Regional_level <- as.factor(trimws(NL_Regional_Statistics2017$Regional_level))
+NL_Regional_Statistics2017$Region_code <- as.factor(trimws(NL_Regional_Statistics2017$Region_code))
+NL_Regional_Statistics2017$Region_name <- as.factor(trimws(NL_Regional_Statistics2017$Region_name))
+NL_Regional_Statistics2017$Province_code <- as.factor(trimws(NL_Regional_Statistics2017$Province_code))
+NL_Regional_Statistics2017$Province_name <- as.factor(trimws(NL_Regional_Statistics2017$Province_name))
+```
+
+```{r}
+head(NL_Regional_Statistics2017)
+
+```
+
+This looks much better!
+
+### Extracting NUTS 1 and NUTS 2 regions
+
+Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively
+
+```{r}
+
+NL_Regions2017 <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "LD")
+NL_Provinces2017 <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "PV")
+```
+
+```{r}
+NL_Provinces2017
+```
+
+We have noticed that the province names in the column `Regional_level_label` all have the suffix *(PV)*. Let's get rid of it:
+
+```{r}
+NL_Provinces2017$Regional_level_label <- str_replace(NL_Provinces2017$Regional_level_label," \\(PV\\)", "")
+
+```
+
+Likewise, the region names in the column `Regional_level_label` all have the suffix *(LD)*. We will also remove that:
+
+
+````{r}
+NL_Regions2017$Regional_level_label <- str_replace(NL_Regions2017$Regional_level_label," \\(LD\\)", "")
+NL_Regions2017
+```
+
+\newpage
+
+### `barplot()`
+
+Let's investigate the spread of the Dutch population over the different regions by creating a barplot.
+
+The most basic call to the `barplot()` function, is just to provide a column from a dataset and leave all the defaults:
+
+```{r exbplot1, eval=FALSE}
+barplot(NL_Provinces2017$Total_population) # Try this yourself - result not printed in this manual
+```
+
+This returns a very basic plot, with no labels and no title, so not very useful.
+
+Use `?barplot()` to see what arguments you can use. After some trial and error you might come to a statement like this:
+
+```{r exbplot2}
+barplot(NL_Provinces2017$Total_population/1000000, names = NL_Provinces2017$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
+```
+
+Not bad at all, for a first attempt. Please note: the provinces are not presented in alphabetical order, but in their  *natural* order, from Groningen (PV20) in the North to Limburg (PV31) in the South.
+
+The provinces at the NUTS 2 level are grouped into regions ('Landsdelen') at the NUTS 1 level. We do know for each province to which region it belongs. Wouldn't it be nice to reflect this division in the plot?
+
+So, In the next plot we will color the bars by region - North, East, West, South - using the `col` argument.
+
+We will need 4 different colors for this plot. In the statement below we use the `palette()` function to manipulate the color palette which is used when a `col=` has a numeric index. Using the `c()` function you create a vector with 4 distinct colors, which is passed as an argument into `palette()`:
+
+```{r}
+palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
+```
+
+
+And now we can create te barplot like this - with the arguments for the legend provided as a `list`:
+
+```{r}
+barplot(NL_Provinces2017$Total_population/1000000, names = NL_Provinces2017$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017$Region_name, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017$Region_name), border = 'grey'))
+```
+
+### `pie()`
+
+Based on the plots in the previous sections we might think that almost half the Dutch population lives in the westernmost region.
+  
+To confirm this hypothesis we will create a pie chart with the population by region.
+
+
+
+Create a pie chart:
+```{r}
+pie(NL_Regions2017$Total_population, labels = NL_Regions2017$Regional_level_label)
+```
+
+\newpage
+
+```{r}
+NL_Regions2017$Regional_level_label <- as.factor(NL_Regions2017$Regional_level_label)
+pct <- round(NL_Regions2017$Total_population/sum(NL_Regions2017$Total_population)*100, 1)
+pct <- paste0(pct, "%")
+lbls <- paste(NL_Regions2017$Regional_level_label, "\n", pct)
+palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
+pie(NL_Regions2017$Total_population, labels = lbls,
+cex = .8, col = NL_Regions2017$Regional_level_label, border = "grey",
+main = "Number of Inhabitants by Region - The Netherlands - 2017")
+```
+
+```{r echo = FALSE, results = 'hide', message = FALSE}
+palette("default")
+```
+
+
+```{r}
+
+NL_Municipalities2017 <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "GM")
+NL_Municipalities2017 <- NL_Municipalities2017 %>% filter(Total_population != "")
+```
+
+
+
+\newpage
+
 # References {-}
 
 * **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
