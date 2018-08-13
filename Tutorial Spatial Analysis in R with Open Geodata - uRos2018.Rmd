@@ -850,27 +850,31 @@ Now that we have prepared our data, we can extract the data about NUTS 1 and NUT
 
 ```{r}
 
-NL_Regions2017 <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "LD")
-NL_Provinces2017 <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "PV")
+NL_Regions2017_data <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "LD")
+NL_Provinces2017_data <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "PV")
+
+# Make sure to drop unused levels from the factors in those new data.frames (which are subsets of a larger data.frame)
+NL_Regions2017_data <- droplevels(NL_Regions2017_data)
+NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
+
 ```
 
 ```{r}
-NL_Provinces2017
+NL_Provinces2017_data
 ```
 
-We have noticed that the province names in the column `Regional_level_label` all have the suffix *(PV)*. Let's get rid of it:
+We have noticed that the province names in the column `Regional_level_label` all have the suffix *(PV)*. Let's get rid of it (but let's make sure it remains a factor):
 
 ```{r}
-NL_Provinces2017$Regional_level_label <- str_replace(NL_Provinces2017$Regional_level_label," \\(PV\\)", "")
-
+NL_Provinces2017_data$Regional_level_label <- as.factor(str_replace(NL_Provinces2017_data$Regional_level_label," \\(PV\\)", ""))
 ```
 
 Likewise, the region names in the column `Regional_level_label` all have the suffix *(LD)*. We will also remove that:
 
 
 ````{r}
-NL_Regions2017$Regional_level_label <- str_replace(NL_Regions2017$Regional_level_label," \\(LD\\)", "")
-NL_Regions2017
+NL_Regions2017_data$Regional_level_label <- as.factor(str_replace(NL_Regions2017_data$Regional_level_label," \\(LD\\)", ""))
+NL_Regions2017_data
 ```
 
 \newpage
@@ -882,7 +886,7 @@ Let's investigate the spread of the Dutch population over the different regions 
 The most basic call to the `barplot()` function, is just to provide a column from a dataset and leave all the defaults:
 
 ```{r exbplot1, eval=FALSE}
-barplot(NL_Provinces2017$Total_population) # Try this yourself - result not printed in this manual
+barplot(NL_Provinces2017_data$Total_population) # Try this yourself - result not printed in this manual
 ```
 
 This returns a very basic plot, with no labels and no title, so not very useful.
@@ -890,7 +894,7 @@ This returns a very basic plot, with no labels and no title, so not very useful.
 Use `?barplot()` to see what arguments you can use. After some trial and error you might come to a statement like this:
 
 ```{r exbplot2}
-barplot(NL_Provinces2017$Total_population/1000000, names = NL_Provinces2017$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
+barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
 ```
 
 Not bad at all, for a first attempt. Please note: the provinces are not presented in alphabetical order, but in their  *natural* order, from Groningen (PV20) in the North to Limburg (PV31) in the South.
@@ -903,13 +907,14 @@ We will need 4 different colors for this plot. In the statement below we use the
 
 ```{r}
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
+
 ```
 
 
 And now we can create te barplot like this - with the arguments for the legend provided as a `list`:
 
 ```{r}
-barplot(NL_Provinces2017$Total_population/1000000, names = NL_Provinces2017$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017$Region_name, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017$Region_name), border = 'grey'))
+barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017_data$Region_code, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017_data$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017_data$Region_name), border = 'grey'))
 ```
 
 ### `pie()`
@@ -922,19 +927,18 @@ To confirm this hypothesis we will create a pie chart with the population by reg
 
 Create a pie chart:
 ```{r}
-pie(NL_Regions2017$Total_population, labels = NL_Regions2017$Regional_level_label)
+pie(NL_Regions2017_data$Total_population, labels = NL_Regions2017_data$Regional_level_label)
 ```
 
 \newpage
 
 ```{r}
-NL_Regions2017$Regional_level_label <- as.factor(NL_Regions2017$Regional_level_label)
-pct <- round(NL_Regions2017$Total_population/sum(NL_Regions2017$Total_population)*100, 1)
+pct <- round(NL_Regions2017_data$Total_population/sum(NL_Regions2017_data$Total_population)*100, 1)
 pct <- paste0(pct, "%")
-lbls <- paste(NL_Regions2017$Regional_level_label, "\n", pct)
+lbls <- paste(NL_Regions2017_data$Regional_level_label, "\n", pct)
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
-pie(NL_Regions2017$Total_population, labels = lbls,
-cex = .8, col = NL_Regions2017$Regional_level_label, border = "grey",
+pie(NL_Regions2017_data$Total_population, labels = lbls, clockwise = TRUE,
+cex = .8, col = NL_Regions2017_data$Regional_level_label, border = "grey",
 main = "Number of Inhabitants by Region - The Netherlands - 2017")
 ```
 
@@ -945,10 +949,40 @@ palette("default")
 
 ```{r}
 
-NL_Municipalities2017 <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "GM")
-NL_Municipalities2017 <- NL_Municipalities2017 %>% filter(Total_population != "")
+NL_Municipalities2017_data <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "GM")
+NL_Municipalities2017_data <- NL_Municipalities2017_data %>% filter(Total_population != "")
+NL_Municipalities2017_data <- droplevels(NL_Municipalities2017_data)
 ```
 
+As we have done in paragraph \ref{GFnl}
+
+```{r}
+# NL: Example with Dutch data
+library(sf)
+library(tmap)
+library(httr)
+
+url <- parse_url("geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?")
+url$scheme <- "https"
+url$query<- list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                 outputFormat = "application/json")
+request <- build_url(url)
+NL_Municipalities2017 <- st_read(request)
+```
+
+\newpage
+Have a look at the result:
+
+```{r}
+
+qtm(NL_Municipalities2017)
+
+head(NL_Municipalities2017)
+
+```
 
 
 \newpage
