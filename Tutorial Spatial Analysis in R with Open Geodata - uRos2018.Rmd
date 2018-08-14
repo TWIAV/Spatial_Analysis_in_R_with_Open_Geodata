@@ -339,19 +339,22 @@ This is the script to populate the full request:
 library(sf)
 library(tmap)
 library(httr)
+library(data.table)
 
-url <- parse_url("geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?")
-url$scheme <- "https"
-url$query<- list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
-                 outputFormat = "application/json")
+url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetFeature",
+                         typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                         outputFormat = "application/json")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
 ```
 
-The variable `request` will now contain this [link](https:///geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=cbsgebiedsindelingen%3Acbs_gemeente_2017_gegeneraliseerd&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=cbsgebiedsindelingen%3Acbs_gemeente_2017_gegeneraliseerd&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
@@ -391,27 +394,30 @@ The URL with `GetCapabilities` request is:
 
 In this XML response - in the `<FeatureTypeList>` section - we have found a `<FeatureType>` with the `<Name>` **vaestoalue:kunta_vaki2017**. That's the value we are giving to the `typename` parameter.
 
-The script to build the full URL is similar to the one before - the only parameters we have modified are the url and the typename:
+The script to build the full URL is similar to the one before - the only parameters we have modified are the hostname and the typename:
 
 ```{r}
 # FI: Example with Finnish data
 library(sf)
 library(tmap)
 library(httr)
+library(data.table)
 
-url <- parse_url("geo.stat.fi/geoserver/vaestoalue/wfs?")
-url$scheme <- "https"
-url$query<- list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "vaestoalue:kunta_vaki2017",
-                 outputFormat = "application/json")
+url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetFeature",
+                         typename = "vaestoalue:kunta_vaki2017",
+                         outputFormat = "application/json")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
 
 ```
 
-The variable `request` will now contain this [link](https:///geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
@@ -481,20 +487,22 @@ The `GetFeature` request below limits the number of Finnish municipalities retur
 ```{r}
 # FI: Example with Finnish data
 library(httr)
+library(data.table)
 
-url <- parse_url("geo.stat.fi/geoserver/vaestoalue/wfs?")
-url$scheme <- "https"
-url$query<- list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "vaestoalue:kunta_vaki2017",
-                 count = 5,
-                 outputFormat = "application/json")
+url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetFeature",
+                         typename = "vaestoalue:kunta_vaki2017",
+                         count = 5,
+                         outputFormat = "application/json")) %>% 
+       setattr("class","url")
 request <- build_url(url)
-print(request)
 
+print(request)
 ```
-The variable `reques` will now contain this [link](https:///geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&count=5&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `reques` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&count=5&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
@@ -507,20 +515,23 @@ The `GetFeature` request below only returns the geometry and the columns *nimi* 
 ```{r}
 # FI: Example with Finnish data
 library(httr)
+library(data.table)
 
-url <- parse_url("geo.stat.fi/geoserver/vaestoalue/wfs?")
-url$scheme <- "https"
-url$query<- list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "vaestoalue:kunta_vaki2017",
-                 propertyname = "geom,nimi,vaesto",
-                 outputFormat = "application/json")
+url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetFeature",
+                         typename = "vaestoalue:kunta_vaki2017",
+                         propertyname = "geom,nimi,vaesto",
+                         outputFormat = "application/json")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
 
 ```
-The variable `request` will now contain this [link](https:///geo.stat.fi/geoserver/vaestoalue/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
@@ -612,18 +623,22 @@ This is the script to populate the full request:
 library(sf)
 library(tmap)
 library(httr)
+library(data.table)
 
-url <- parse_url(paste0("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/","USA_States_Generalized/FeatureServer/0/query?"))
-url$scheme <- "https"
-url$query<- list(where = "1=1",
-                 outFields = "*",
-                 returnGeometry = "true",
-                 f = "geojson")
+url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
+            scheme = "https",
+            path = "USA_States_Generalized/FeatureServer/0/query",
+            query = list(where = "1=1",
+                         outFields = "*",
+                         returnGeometry = "true",
+                         f = "geojson")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
 ```
 
-The variable `request` will now contain this [link](https:///services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=%2A&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=%2A&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
@@ -664,18 +679,23 @@ The `query` request below only returns those States which have more than 10 mill
 ```{r}
 # USA: An example with American data
 library(httr)
+library(data.table)
 
-url <- parse_url(paste0("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/","USA_States_Generalized/FeatureServer/0/query?"))
-url$scheme <- "https"
-url$query<- list(where = "POPULATION>10000000",
-                 outFields = "STATE_NAME,POPULATION",
-                 returnGeometry = "true",
-                 f = "geojson")
+url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
+            scheme = "https",
+            path = "USA_States_Generalized/FeatureServer/0/query",
+            query = list(where = "POPULATION>10000000",
+                         outFields = "STATE_NAME,POPULATION",
+                         returnGeometry = "true",
+                         f = "geojson")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
+
 ```
 
-The variable `request` will now contain this [link](https:///services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=POPULATION%3E10000000&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=POPULATION%3E10000000&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 
 ### Limit the number of columns returned: the `outFields` parameter
@@ -687,18 +707,23 @@ The `query` request below only returns the geometry and the columns STATE_NAME a
 ```{r}
 # USA: An example with American data
 library(httr)
+library(data.table)
 
-url <- parse_url(paste0("services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/","USA_States_Generalized/FeatureServer/0/query?"))
-url$scheme <- "https"
-url$query<- list(where = "1=1",
-                 outFields = "STATE_NAME,POPULATION",
-                 returnGeometry = "true",
-                 f = "geojson")
+url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
+            scheme = "https",
+            path = "USA_States_Generalized/FeatureServer/0/query",
+            query = list(where = "1=1",
+                         outFields = "STATE_NAME,POPULATION",
+                         returnGeometry = "true",
+                         f = "geojson")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
+
 ```
 
-The variable `request` will now contain this [link](https:///services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
@@ -740,25 +765,7 @@ nrow(toc_en)
 
 \newpage
 
-\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
-\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=NUTS - Nomenclature des Unités Territoriales Statistiques]
-\href{http://ec.europa.eu/eurostat/web/main/home}{Eurostat} uses a set of geospatial classifications, but the heart of these is NUTS:  the \textbf{Nomenclature of Territorial Units for Statistics}.\\
-This classification was set up by Eurostat at the beginning of the 1970s. It serves as a single, coherent system for dividing up the EU's territory in order to produce regional statistics for the European Union.\\
-\\
-Ther are three levels of NUTS regions:
-\begin{itemize}
-\item{NUTS 1: major socio-economic regions}
-\item{NUTS 2: basic regions for the application of regional policies}
-\item{NUTS 3: small regions for specific diagnoses}
-\end{itemize}
-
-\includegraphics{Images/Eurostat_logo.png}
-More information on the NUTS classification can be found here: \url{http://ec.europa.eu/eurostat/web/nuts/background}\\
-\\
-Eurostat even created a nice video on the topic: \url{https://youtu.be/a4Y-hCQ-Klo}
-\end{tcolorbox}
-
-## NUTS regions in the Netherlands: exercises with regional statistical data
+## Exercises with regional statistical data
 
 ### Preparing the data
 
@@ -796,7 +803,7 @@ NL_Regional_Statistics2017 <- NL_Regional_Statistics2017 %>% cbs_add_label_colum
 We will now rename the columns of our table for further use in the exercise:
 
 ```{r}
-names(NL_Regional_Statistics2017) <- c("Regional_level","Regional_level_label","Year","Year_label","Total_population","Region_code","Region_name","Province_code","Province_name")
+names(NL_Regional_Statistics2017) <- c("Code","Name","Year","Year_label","Total_population","Region_code","Region_name","Province_code","Province_name")
 ```
 Each column has a label. To avoid issues later on in this exercise, we will remove these labels now:
 
@@ -815,10 +822,10 @@ head(NL_Regional_Statistics2017)
 
 In the first row we can see the total number of inhabitants in the Netherlands on January 1st, 2017, which is: *17,081,507*.
 
-And wait, we notice something else: some columns seem to have a fixed width. For example, the columns `Regional_level` and  `Region_name`:
+And wait, we notice something else: some columns seem to have a fixed width. For example, the columns `Code` and  `Region_name`:
 
 ```{r}
-paste(NL_Regional_Statistics2017$Regional_level[1])
+paste(NL_Regional_Statistics2017$Code[1])
 paste(NL_Regional_Statistics2017$Region_name[6])
 ```
 ```{r}
@@ -830,7 +837,7 @@ This is weird, isn't it? The string 'Noord-Nederland' - which is only 15 charate
 Let's fix this issue with the function `trimws()` for the columns concerned:
 
 ```{r}
-NL_Regional_Statistics2017$Regional_level <- as.factor(trimws(NL_Regional_Statistics2017$Regional_level))
+NL_Regional_Statistics2017$Code <- as.factor(trimws(NL_Regional_Statistics2017$Code))
 NL_Regional_Statistics2017$Region_code <- as.factor(trimws(NL_Regional_Statistics2017$Region_code))
 NL_Regional_Statistics2017$Region_name <- as.factor(trimws(NL_Regional_Statistics2017$Region_name))
 NL_Regional_Statistics2017$Province_code <- as.factor(trimws(NL_Regional_Statistics2017$Province_code))
@@ -844,14 +851,34 @@ head(NL_Regional_Statistics2017)
 
 This looks much better!
 
+\newpage
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=NUTS - Nomenclature des Unités Territoriales Statistiques]
+\href{http://ec.europa.eu/eurostat/web/main/home}{Eurostat} uses a set of geospatial classifications, but the heart of these is NUTS:  the \textbf{Nomenclature of Territorial Units for Statistics}.\\
+This classification was set up by Eurostat at the beginning of the 1970s. It serves as a single, coherent system for dividing up the EU's territory in order to produce regional statistics for the European Union.\\
+\\
+Ther are three levels of NUTS regions:
+\begin{itemize}
+\item{NUTS 1: major socio-economic regions}
+\item{NUTS 2: basic regions for the application of regional policies}
+\item{NUTS 3: small regions for specific diagnoses}
+\end{itemize}
+
+\includegraphics{Images/Eurostat_logo.png}
+More information on the NUTS classification can be found here: \url{http://ec.europa.eu/eurostat/web/nuts/background}\\
+\\
+Eurostat even created a nice video on the topic: \url{https://youtu.be/a4Y-hCQ-Klo}
+\end{tcolorbox}
+
 ### Extracting NUTS 1 and NUTS 2 regions
 
 Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively
 
 ```{r}
 
-NL_Regions2017_data <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "LD")
-NL_Provinces2017_data <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "PV")
+NL_Regions2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "LD")
+NL_Provinces2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "PV")
 
 # Make sure to drop unused levels from the factors in those new data.frames (which are subsets of a larger data.frame)
 NL_Regions2017_data <- droplevels(NL_Regions2017_data)
@@ -863,17 +890,17 @@ NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
 NL_Provinces2017_data
 ```
 
-We have noticed that the province names in the column `Regional_level_label` all have the suffix *(PV)*. Let's get rid of it (but let's make sure it remains a factor):
+We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of it (but let's make sure it remains a factor):
 
 ```{r}
-NL_Provinces2017_data$Regional_level_label <- as.factor(str_replace(NL_Provinces2017_data$Regional_level_label," \\(PV\\)", ""))
+NL_Provinces2017_data$Name <- as.factor(str_replace(NL_Provinces2017_data$Name," \\(PV\\)", ""))
 ```
 
-Likewise, the region names in the column `Regional_level_label` all have the suffix *(LD)*. We will also remove that:
+Likewise, the region names in the column `Name` all have the suffix *(LD)*. We will also remove that:
 
 
 ````{r}
-NL_Regions2017_data$Regional_level_label <- as.factor(str_replace(NL_Regions2017_data$Regional_level_label," \\(LD\\)", ""))
+NL_Regions2017_data$Name <- as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
 NL_Regions2017_data
 ```
 
@@ -894,7 +921,7 @@ This returns a very basic plot, with no labels and no title, so not very useful.
 Use `?barplot()` to see what arguments you can use. After some trial and error you might come to a statement like this:
 
 ```{r exbplot2}
-barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
+barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Name, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
 ```
 
 Not bad at all, for a first attempt. Please note: the provinces are not presented in alphabetical order, but in their  *natural* order, from Groningen (PV20) in the North to Limburg (PV31) in the South.
@@ -914,8 +941,10 @@ palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
 And now we can create te barplot like this - with the arguments for the legend provided as a `list`:
 
 ```{r}
-barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Regional_level_label, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017_data$Region_code, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017_data$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017_data$Region_name), border = 'grey'))
+barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Name, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017_data$Region_code, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017_data$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017_data$Region_name), border = 'grey'))
 ```
+
+\newpage
 
 ### `pie()`
 
@@ -927,7 +956,7 @@ To confirm this hypothesis we will create a pie chart with the population by reg
 
 Create a pie chart:
 ```{r}
-pie(NL_Regions2017_data$Total_population, labels = NL_Regions2017_data$Regional_level_label)
+pie(NL_Regions2017_data$Total_population, labels = NL_Regions2017_data$Name)
 ```
 
 \newpage
@@ -935,10 +964,10 @@ pie(NL_Regions2017_data$Total_population, labels = NL_Regions2017_data$Regional_
 ```{r}
 pct <- round(NL_Regions2017_data$Total_population/sum(NL_Regions2017_data$Total_population)*100, 1)
 pct <- paste0(pct, "%")
-lbls <- paste(NL_Regions2017_data$Regional_level_label, "\n", pct)
+lbls <- paste(NL_Regions2017_data$Name, "\n", pct)
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
 pie(NL_Regions2017_data$Total_population, labels = lbls, clockwise = TRUE,
-cex = .8, col = NL_Regions2017_data$Regional_level_label, border = "grey",
+cex = .8, col = NL_Regions2017_data$Name, border = "grey",
 main = "Number of Inhabitants by Region - The Netherlands - 2017")
 ```
 
@@ -946,13 +975,19 @@ main = "Number of Inhabitants by Region - The Netherlands - 2017")
 palette("default")
 ```
 
+\newpage
+
+### Extracting municipal data
+
 
 ```{r}
 
-NL_Municipalities2017_data <- NL_Regional_Statistics2017 %>% filter(Regional_level %like% "GM")
+NL_Municipalities2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "GM")
 NL_Municipalities2017_data <- NL_Municipalities2017_data %>% filter(Total_population != "")
 NL_Municipalities2017_data <- droplevels(NL_Municipalities2017_data)
 ```
+
+### Merging sf and data.frame objects
 
 As we have done in paragraph \ref{GFnl}
 
@@ -961,26 +996,46 @@ As we have done in paragraph \ref{GFnl}
 library(sf)
 library(tmap)
 library(httr)
+library(data.table)
 
-url <- parse_url("geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs?")
-url$scheme <- "https"
-url$query<- list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
-                 outputFormat = "application/json")
+url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetFeature",
+                         typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                         outputFormat = "application/json")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 NL_Municipalities2017 <- st_read(request)
 ```
 
-\newpage
+
 Have a look at the result:
 
 ```{r}
+NL_Municipalities2017 <- NL_Municipalities2017 %>% select(statcode,statnaam)
 
-qtm(NL_Municipalities2017)
+names(NL_Municipalities2017)[1:2] <- c("Code","Name")
 
-head(NL_Municipalities2017)
+NL_Municipalities2017 <- merge(NL_Municipalities2017,NL_Municipalities2017_data, by = "Code")
+
+class(NL_Municipalities2017)
+```
+\newpage
+
+### `qtm()`
+
+```{r}
+palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
+qtm(shp = NL_Municipalities2017,
+    title= "Regional subdivison",
+    fill = "Region_name",
+    fill.title = "The Netherlands - 2017\nRegion",
+    fill.palette = palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1")),
+    borders = "grey",
+    format = "NLD_wide")
 
 ```
 
@@ -1040,29 +1095,30 @@ This is the script to build the full `GetFeature` request:
 library(sf)
 library(tmap)
 library(httr)
+library(data.table)
 
-url <- parse_url("geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?")
-url$scheme <- "https"
-url$query<- list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "bevolkingskernen2011:cbsbevolkingskernen2011",
-                 outputFormat = "application/json")
+url <- list(hostname = "geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetFeature",
+                         typename = "bevolkingskernen2011:cbsbevolkingskernen2011",
+                         outputFormat = "application/json")) %>% 
+       setattr("class","url")
 request <- build_url(url)
+
 print(request)
 
 
 
 ```
-The variable `request` will now contain this [link](https:///geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011%3Acbsbevolkingskernen2011&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011%3Acbsbevolkingskernen2011&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
 ```{r}
 NL_Human_Settlements2011 <- st_read(request)
 ```
-
-\newpage
 
 ```{r}
 plot(st_geometry(NL_Human_Settlements2011), col = "orange", border = "red")
