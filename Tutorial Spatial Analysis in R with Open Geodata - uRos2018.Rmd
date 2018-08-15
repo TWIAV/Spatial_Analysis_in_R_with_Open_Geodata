@@ -1039,6 +1039,94 @@ qtm(shp = NL_Municipalities2017,
 
 ```
 
+\newpage
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\textbf{Factors in R}]
+Conceptually, factors are variables in R which can only contain a pre-defined set of values, known as levels. Factors are often referred to as categorical variables, which can either be ordered (e.g. 'low', 'medium', 'high') or unordered (e.g. 'male', 'female').\par
+One of the most important uses of factors is in statistical analysis and plotting. Storing categorical variables as factors insures that the statistical modeling functions will treat such data correctly. Factors are stored in R as a vector of integers, with a corresponding set of labels. These labels - one for each level - are used when the factor is displayed.\par
+When data are being loaded into R, for example with the function \textbf{read.csv()}, all columns containing text (character data) will be automatically converted to factors. While this is very useful in many cases, there might also be situations where you will want to treat your data as continuous variables.
+\end{tcolorbox}
+
+## Factor: group municipalities into categories
+
+In this exercise we will divide our municipalities in 3 groups: small, medium and large.
+
+A small municipality has less than 50,000 inhabitants, a medium sized one has between 50,000 and 200,000, whereas a municipality with more than 200,000 inhabitants is considered to be large.
+
+
+```{r ordered_factor}
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 50000] <- "Small"
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 50000 & NL_Municipalities2017$Total_population < 200000] <- "Medium"
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 200000] <- "Large"
+```
+
+```{r ordered_factor2}
+class(NL_Municipalities2017$Category)
+
+NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Small","Medium","Large"), ordered = TRUE)
+
+class(NL_Municipalities2017$Category)
+```
+```{r change_categories, echo = FALSE, results = 'hide', message = FALSE}
+NL_Municipalities2017$Category <- as.character(NL_Municipalities2017$Category)
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 20000] <- "Very small"
+NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Very small","Small","Medium","Large"), ordered = TRUE)
+```
+
+
+
+```{r tmapcategories}
+qtm(shp = NL_Municipalities2017, title= "Municipalities by Size",
+    fill = "Category", fill.title = "The Netherlands - 2017\nCategory", borders = "grey", format = "NLD_wide")
+```
+
+Please note: in the map printed above there are not 3 categories, but 4. We have added a category 'very small' for municipalities with less than 20,000 inhabitants.
+
+Challenge:
+
+What steps do you need to take to add a new factor level after factors have been defined?
+
+
+\newpage
+
+# Spatial Refernce Systems
+
+\begin{multicols}{2}
+
+In this chapter we will have a quick look at an important topic when handling geospatial data, i.e the Coordinate Reference System (or Spatial Refernce System) , which defines how spatial elements relate to the surface of the Earth and which is  used to project our geodata on a flat screen. We have ignored this subject more or less in the previous exercises, mainly because of the fact that the whole matter of projecting the data is handled very well in the `sf` package, or rather the `proj.4` software behind it. We just didn't have to think about it. Or wait, we did set a `crs` explicitly - using an `epsg` code - in the very first exercise this morning. Remember?
+
+In general when you read in spatial data it comes with a proper CRS and if all your data is in this same projection, you really don't have to worry about all the geodesy behind it. But what if you want to combine data from different sources which appear to have different spatial reference systems?
+
+Therefor we will shortly touch upon:
+
+\begin{itemize}
+\item{Geographic coordinate systems vs. Projected coordinate systems}
+\item{the two main ways to describe a CRS in R: the `epsg` code and the `proj4string` definition}
+\item{how to reproject your data - temporarily or permanently}
+\end{itemize}
+
+\end{multicols}
+
+## Coordinate systems: Geographic vs. Projected
+
+Geographic coordinate systems identify locations on the Earth's surface using longitude and latitude. Longitude is the distance East or West in angular distance, i.e. measured in degrees, from the Prime Meridian plane. Latitude is this distance North or South of the equatorial plane. And no, there is not just one 'Lat\\Lon coordinate system'. All geographic systems have the use the same reference, i.e. the Prime Meridian and the Equator, but the exact location on the Earth depends on several parameters like the ellipsoid and the datum used. So even if someone gives you data 'in degrees' you still have to find out which CRS to use. With a wrong CRS your data might end up centimeters or even several meters from the correct location. An important advantage of these geographic systems is their global reach - they can be used everywhere and are useful when dealing with international datasets. An important disadvantge is: distances cannot be easily measured in for example meters or kilomters in geographic CRSs.
+
+Projected coordinate system have a much smaller reach, as these are based on Cartesian coordinates on an implicitly flat surface. They are only valid for a specific area - a country or even just a part of a country - where they have an origin, x and y axes, and a linear unit of measurement such as meters. We have seen several examples of data in such local, projected systems, e.g. EPSG:31287 for Austria, EPSG:3067 for Finland and EPSG:28992 for the Netherlands (but only onshore). These systems are ideal for dealing with data at a nationnal or subnational level. In such a case you shuld really stick with the local CRS. 
+
+## `epsg` codes and. `proj4string` definitions
+
+As there are so many coordinate systems worldwide it is good to be clear about what system you use in your analysis. There are two main ways to describe a CRS in R: the `epsg` code and the `proj4string` definition. If you get your spatial data from a proper source, the `st_read()` function will return both, as we have seen in the exercises before.
+
+The `epsg` code gets it name from the - no longer existing - *European Petroleum Survey Group*. The set of EPSG definitions is currently maintained by the  International Association of Oil & Gas Producers (IOGP). Apparently location is very important in the fossil fuel industry.
+
+An `epsg` code refers to only one, well-defined coordinate reference system. This coding system is widely adopted by the geospatial community, so if you get XY data with an existing `epsg` code you can easily plot your data on the map, in R or in any other GIS system for that matter.
+
+A `proj4string` definition contains different parameters such as the projection type, the datum and the ellipsoid. It allows you to specify your own projection, or to modfy an existing one. But in general it would be advisable to refer to the data provider if there is something wrong with the projection of your data.
+
+\newpage
+
+## Reprojecting data
 
 \newpage
 
@@ -1058,6 +1146,7 @@ API | application programming interface
 CRAN | Comprehensive R Archive Network
 GIS | Geographic Information System
 GML | Geography Markup Language
+IOGP | International Association of Oil & Gas Producers
 JSON | JavaScript Object Notation
 OGC | Open Geospatial Consortium
 REST | Representational State Transfer
