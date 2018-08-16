@@ -1,6 +1,7 @@
 ---
 header-includes:
    - \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
+   - \usepackage{listings}
    - \usepackage[skins]{tcolorbox}
    - \usepackage{float}
    - \usepackage{multicol}
@@ -38,8 +39,9 @@ urlcolor: blue
 
 \newpage
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, cache = FALSE}
 knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
+knitr::opts_chunk$set(error = TRUE)
 ```
 
 \huge Tutorial - Spatial Analysis in R with Open Geodata
@@ -49,7 +51,7 @@ knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.1.9 - August 1, 2018
+Version 0.3.7 - August 16, 2018
 
 \begin{multicols}{2}
 
@@ -89,7 +91,7 @@ The URL of this repository: [https://github.com/TWIAV/Spatial_Analysis_in_R_with
 
 # The package `sf` (Simple Features for R) \label{simple_features}
 
-To manage spatial data in R you will use the library `sf`, a relativle new addition to the R universe. The package was [released on CRAN in January 2017](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran).
+To manage spatial data in R in this manual we will be using the library `sf`, a relativle new addition to the R universe. The package was [released on CRAN in January 2017](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran).
 
 This package provides support for simple features, which is a standardized way to encode spatial vector data.
 
@@ -100,7 +102,7 @@ This package provides support for simple features, which is a standardized way t
 * Proj.4 for projection conversions and datum transformations.
 
 **The package `sf` on CRAN:**  
-[https://cran.r-project.org/web/packages/sf/index.html](https://cran.r-project.org/web/packages/sf/index.html)
+[https://cran.r-project.org/package=sf](https://cran.r-project.org/package=sf)
 
 
 If the package is not yet installed, you can install it with the following command:
@@ -116,7 +118,7 @@ library(sf)
 ```
 
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
-\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=The real geospatial powers behind sf]
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\Large{The real geospatial powers behind \lstinline{sf}}]
 \begin{itemize}
 \item GDAL: the \textbf{Geospatial Data Abstraction Library} is a translator library for raster and vector geospatial data formats. Website: \url{http://www.gdal.org/}
 \item GEOS: the \textbf{Geometry Engine, Open Source} contains the complete functionality of the OpenGIS Simple Features for SQL spatial predicate functions and spatial operators. Website: \url{https://trac.osgeo.org/geos}
@@ -124,7 +126,11 @@ library(sf)
 \end{itemize}
 \end{tcolorbox}
 
-# A first exercise
+\newpage
+
+## `st_as_sf()`: converting a `data.frame` into an `sf` object
+
+In this first exercise we will try to get some Dutch airports on the map. Let's start with defining some variables:
 
 ```{r}
 ap <- "Lelystad Airport"
@@ -133,21 +139,53 @@ class(cd)
 lat <- 52.460278
 lon <- 5.527222
 class(lon)
+```
+
+Now we will combine these variables into a `data.frame`:
+
+```{r}
+
 airport <- data.frame(ap, cd, lat, lon, stringsAsFactors = FALSE)
+
+```
+
+Wait, we have found a CSV file with some more airports:
+
+```{r}
 NL_Airports <- read.csv("http://www.twiav.nl/files/NL_Airports.csv", stringsAsFactors = FALSE)
 
-print(NL_Airports)
+NL_Airports
 
 ```
-```{r, eval = FALSE}
-NL_Airports <- rbind(NL_Airports, airport) # This will give an error
+
+Let's add our single airport to this dataset:
+
+```{r}
+NL_Airports <- rbind(NL_Airports, airport) # Oh yeah, of course: this will generate an error...
 ```
+
+We can easily solve this issue setting the names equal to eachother:
 ```{r}
 names(airport) <- names(NL_Airports)
+```
 
+Now we can `rbind` the two data.frames:
+
+```{r}
 NL_Airports <- rbind(NL_Airports, airport)
-print(NL_Airports)
+NL_Airports
+
 class(NL_Airports)
+
+```
+
+Now, how do we convert this `data.frame` into an `sf` object? We have got information on the latitude and the longitude of our airports, and we can use this to create geometry, in this case: points.
+
+Please note: the Coordinate Reference System (CRS) of these lat\\lon coordinates is WGS84, which has been given the EPSG code 4326. In chapter \ref{ChapCRS} we will have a closer look at spatial reference systems.
+
+Now we can use the function `st_as_sf()` to convert our `data.frame` - with `longitude` first:
+
+```{r}
 
 library(sf)
 
@@ -155,33 +193,78 @@ NL_Airports <- st_as_sf(NL_Airports, coords = c("longitude","latitude"), crs = 4
 
 class(NL_Airports)
 
-plot(st_geometry(NL_Airports), pch = 17)
-
 ```
+
+Our dataset is now both a `data.frame` and an `sf` object, with all the conveniences which come with this dual status!
+
+\begin{figure}[H]
+\centering
+\caption{Our first \textbf{sf} object in the \textbf{RStudio Environment pane}}
+\vspace{5pt}
+\includegraphics[width=172mm]{Images/sf_object_in_environment.png}
+\label{sf_object_in_environment}
+\end{figure}
 
 \newpage
 
-# Interactive Viewing of Spatial Data in R
+And when we plot the data to the screen we ca see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
 
-Until now you have seen some static maps plotted o the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing.
+```{r}
+NL_Airports
 
-In this chapter we will look at some of these.
+```
 
-## The package `mapview`
+And we can plot our airports like this:
+
+```{r}
+
+plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
+
+```
+
+
+
+\newpage
+
+## Interactive Viewing of Spatial Data in R
+
+Until now you have seen some static maps plotted o the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
+
+In this paragraph we will look at two of these.
+
+### The package `mapview`
 
 **The package `mapview` on CRAN:**  
-[https://cran.r-project.org/web/packages/mapview/index.html](https://cran.r-project.org/web/packages/mapview/index.html)
+[https://cran.r-project.org/package=mapview](https://cran.r-project.org/package=mapview)
 
 If the package is not yet installed, you can install it with the following command:
 
-```{r install_mv, eval = FALSE}
+```{r, eval = FALSE}
 install.packages("mapview")
 ```
 
 To be able to view your spatial data interactively you will first have to load the package `mapview`:
 
-```{r library_mv}
+```{r}
 library(mapview)
+```
+
+
+### The package `tmap`
+
+**The package `tmap` on CRAN:**  
+[https://cran.r-project.org/package=tmap](https://cran.r-project.org/package=tmap)
+
+If the package is not yet installed, you can install it with the following command:
+
+```{r, eval = FALSE}
+install.packages("tmap")
+```
+
+To be able to view your spatial data interactively you will first have to load the package `tmap`:
+
+```{r}
+library(tmap)
 ```
 
 
@@ -196,8 +279,6 @@ library(mapview)
 In this chapter we will learn how to download, to unzip and to load shapefiles \textbf{using R}. There will be no need to use your web browser, your file explorer or a zip utility - the whole process can be completed using just a few lines of R code.
 
 The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapfile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consits of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
-
-\includegraphics{Images/cbs.png}
 
 The shapefile format has been developed by \href{https://www.esri.com/}{Esri} and over the years has become a \textit{de facto} standard for data interoperability among Esri and other GIS software products.
 
@@ -657,7 +738,7 @@ qtm(USA_States_2017)
 
 
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
-\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=Anchorage]
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\Large{Anchorage}]
 "Hey Chel you know it's kinda funny\\
  Texas always seems so big\\
  But you know you're in the largest State in the Union\\
@@ -854,7 +935,7 @@ This looks much better!
 \newpage
 
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
-\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=NUTS - Nomenclature des Unités Territoriales Statistiques]
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\Large{NUTS - Nomenclature des Unités Territoriales Statistiques}]
 \href{http://ec.europa.eu/eurostat/web/main/home}{Eurostat} uses a set of geospatial classifications, but the heart of these is NUTS:  the \textbf{Nomenclature of Territorial Units for Statistics}.\\
 This classification was set up by Eurostat at the beginning of the 1970s. It serves as a single, coherent system for dividing up the EU's territory in order to produce regional statistics for the European Union.\\
 \\
@@ -1042,7 +1123,7 @@ qtm(shp = NL_Municipalities2017,
 \newpage
 
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
-\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\textbf{Factors in R}]
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\Large{Factors in R}]
 Conceptually, factors are variables in R which can only contain a pre-defined set of values, known as levels. Factors are often referred to as categorical variables, which can either be ordered (e.g. 'low', 'medium', 'high') or unordered (e.g. 'male', 'female').\par
 One of the most important uses of factors is in statistical analysis and plotting. Storing categorical variables as factors insures that the statistical modeling functions will treat such data correctly. Factors are stored in R as a vector of integers, with a corresponding set of labels. These labels - one for each level - are used when the factor is displayed.\par
 When data are being loaded into R, for example with the function \textbf{read.csv()}, all columns containing text (character data) will be automatically converted to factors. While this is very useful in many cases, there might also be situations where you will want to treat your data as continuous variables.
@@ -1090,7 +1171,7 @@ What steps do you need to take to add a new factor level after factors have been
 
 \newpage
 
-# Spatial Refernce Systems
+# Spatial Refernce Systems \label{ChapCRS}
 
 \begin{multicols}{2}
 
