@@ -1,38 +1,38 @@
 ---
 header-includes:
-   - \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
-   - \usepackage{listings}
-   - \usepackage[skins]{tcolorbox}
-   - \usepackage{float}
-   - \usepackage{multicol}
-   - \usepackage{graphicx}
-   - \usepackage{lastpage}
-   - \usepackage{fancyhdr}
-   - \pagestyle{fancy}
-   - \fancyhf{}
-   - \lhead{Use of R in Official Statistics - uRos2018}
-   - \rhead{6th international conference, The Hague, September 2018}
-   - \usepackage[numbered]{bookmark}
-   - \usepackage{hyperref}
-   - \hypersetup{
-     pdftitle={Tutorial - Spatial Analysis in R with Open Geodata - uRos2018},
-     pdfauthor={Egge-Jan Pollé and Willy Tadema}
-     }
-   - \hypersetup{linkcolor = {blue}, urlcolor = {blue}}
-   - \renewcommand{\footrulewidth}{0.4pt}
-   - \fancyfoot{}
-   - \fancyfoot[l]{\titletxt}
-   - \fancyfoot[r]{Page \thepage\ of \pageref*{LastPage}}
-   - \usepackage{fvextra}
-   - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
-   - \usepackage{xcolor}
-   - \definecolor{grey}{rgb}{0.8,0.8,0.8}
-   - \usepackage{enumitem}
-   - \renewcommand{\figurename}{Figure}
-output: 
+- \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
+- \usepackage{listings}
+- \usepackage[skins]{tcolorbox}
+- \usepackage{float}
+- \usepackage{multicol}
+- \usepackage{graphicx}
+- \usepackage{lastpage}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhf{}
+- \lhead{Use of R in Official Statistics - uRos2018}
+- \rhead{6th international conference, The Hague, September 2018}
+- \usepackage[numbered]{bookmark}
+- \usepackage{hyperref}
+- \hypersetup{ pdftitle={Tutorial - Spatial Analysis in R with Open Geodata - uRos2018},
+  pdfauthor={Egge-Jan PollÃ© and Willy Tadema} }
+- \hypersetup{linkcolor = {blue}, urlcolor = {blue}}
+- \renewcommand{\footrulewidth}{0.4pt}
+- \fancyfoot{}
+- \fancyfoot[l]{\titletxt}
+- \fancyfoot[r]{Page \thepage\ of \pageref*{LastPage}}
+- \usepackage{fvextra}
+- \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+- \usepackage{xcolor}
+- \definecolor{grey}{rgb}{0.8,0.8,0.8}
+- \usepackage{enumitem}
+- \renewcommand{\figurename}{Figure}
+mainfont: Calibri
+output:
   pdf_document:
     latex_engine: lualatex
-mainfont: Calibri
+  html_document:
+    df_print: paged
 urlcolor: blue
 ---
 
@@ -40,7 +40,7 @@ urlcolor: blue
 \newpage
 
 ```{r setup, include=FALSE, cache = FALSE}
-knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE, strip.white = FALSE, echo = TRUE)
 knitr::opts_chunk$set(error = TRUE)
 ```
 
@@ -51,7 +51,7 @@ knitr::opts_chunk$set(error = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.3.7 - August 16, 2018
+Version 0.3.8 - August 19, 2018
 
 \begin{multicols}{2}
 
@@ -207,7 +207,7 @@ Our dataset is now both a `data.frame` and an `sf` object, with all the convenie
 
 \newpage
 
-And when we plot the data to the screen we ca see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
+And when we plot the data to the screen we can see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
 
 ```{r}
 NL_Airports
@@ -228,7 +228,7 @@ plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
 
 ## Interactive Viewing of Spatial Data in R
 
-Until now you have seen some static maps plotted o the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
+Until now you have seen some static maps plotted on the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
 
 In this paragraph we will look at two of these.
 
@@ -278,7 +278,7 @@ library(tmap)
 
 In this chapter we will learn how to download, to unzip and to load shapefiles \textbf{using R}. There will be no need to use your web browser, your file explorer or a zip utility - the whole process can be completed using just a few lines of R code.
 
-The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapfile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consits of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
+The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapefile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consists of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
 
 The shapefile format has been developed by \href{https://www.esri.com/}{Esri} and over the years has become a \textit{de facto} standard for data interoperability among Esri and other GIS software products.
 
@@ -291,46 +291,39 @@ It is not uncommon for public organizations - including national statistical ins
 ## Download and unzip the shapefile
 
 ```{r eval=FALSE}
-# Set the working directory
-setwd("C:/uRos2018")
 # Store the URL to the file to download in a variable
 URL2zip <- "http://data.statistik.gv.at/data/OGDEXT_GEM_1_STATISTIK_AUSTRIA_20180101.zip"
-print(URL2zip)
-# Extract the filename from this URL
-zip_file <- file.path(basename(URL2zip))
-print(zip_file)
-# Create a subfolder in your working directory to store the data
-dir.create("./Data", showWarnings = FALSE)
-# store the path to the current working directory in a variable
-workdir <- getwd()
-# switch to the data folder you just created
-setwd("./Data")
+
+# Create a temporary file 
+zip_file <- tempfile(fileext = ".zip")
+
 # Download the file
 download.file(URL2zip, destfile = zip_file, mode = "wb")
-# unzip the file
-unzip(zip_file)
-# after unzipping you can delete (i.e. unlink) the file
+
+# Create a subfolder in your working directory to store the unzipped data
+dir.create("./Data", showWarnings = FALSE)
+
+# Unzip the file
+unzip(zip_file, exdir = "./Data")
+      
+# After unzipping you can delete (i.e. unlink) the file
 unlink(zip_file)
-# Return to the original working directory
-setwd(workdir)
-# remove variables you do not longer need
-rm(URL2zip,zip_file,workdir)
+
+# Remove variables you do not longer need
+rm(URL2zip, zip_file)
 ```
 
 ```{r echo=FALSE}
-setwd("C:/uRos2018")
 URL2zip <- "http://data.statistik.gv.at/data/OGDEXT_GEM_1_STATISTIK_AUSTRIA_20180101.zip"
-zip_file <- file.path(basename(URL2zip))
-dir.create("C:/uRos2018/Data", showWarnings = FALSE)
-setwd("C:/uRos2018/Data")
+zip_file <- tempfile(fileext = ".zip")
 download.file(URL2zip, destfile = zip_file, mode = "wb")
-unzip(zip_file)
+dir.create("./Data", showWarnings = FALSE)
+unzip(zip_file, exdir = "./Data")
 unlink(zip_file)
-setwd("C:/uRos2018")
+rm(URL2zip, zip_file)
 ```
 
 ## Load the shapefile
-
 
 ```{r eval=FALSE}
 library(sf)
@@ -338,10 +331,10 @@ library(tmap)
 AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 ```
 
-```{r echo=FALSE}
+```{r echo=FALSE, results='hide'}
 library(sf)
 library(tmap)
-AUSTRIA_GEM_20180101 <- st_read("C:/uRos2018/Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
+AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 ```
 
 ```{r eval=FALSE}
@@ -380,7 +373,7 @@ On the contrary, the GeoJSON standard clearly defines several types of JSON obje
 
 In general **GDAL**, the translator library behind the `sf` functions `st_read()` and `st_write` (see chapter \ref{simple_features}), gives better results with GeoJSON as opposed to GML.
 
-So, in the exercises in this manual, when accessing a WFS service o retrieve data, we will always add the parameter `outputFormat=application/json`.
+So, in the exercises in this manual, when accessing a WFS service to retrieve data, we will always add the parameter `outputFormat=application/json`.
 
 ## Access a WFS service: `request=GetCapabilities` \label{GCnl}
 
@@ -407,11 +400,11 @@ We will start with a simple request to download a full feature collection withou
 
 In the script below we use the `httr` package. This allows us to store the different parameters of our request in a list, only to build the full URL at the end. We do so for readability reasons and to allow for easy modification of our request at a later stage if necessary. And the function `build_url()` will return a properly encoded URL.
 
-A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapalities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
+A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapabilities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
 
-What we are intersted in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
+What we are interested in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
 
-Aslso, do not forget to add a parameter to ask for output in GeoJSON format (as discussed in paragraph \ref{gmlGEOJSON}).
+Also, do not forget to add a parameter to ask for output in GeoJSON format (as discussed in paragraph \ref{gmlGEOJSON}).
 
 This is the script to populate the full request:
 
