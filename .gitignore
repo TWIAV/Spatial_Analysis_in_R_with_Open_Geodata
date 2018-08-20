@@ -1,0 +1,8 @@
+# Voorlopig publiceren we de PDF-versie nog niet op GitHub
+Tutorial_Spatial_Analysis_in_R_with_Open_Geodata_-_uRos2018.*
+
+# De map met data wordt door het R script gecreëerd en gevuld
+Data/*
+
+# Overige data die het script in de projectmap zet
+NL_Airports.geojson

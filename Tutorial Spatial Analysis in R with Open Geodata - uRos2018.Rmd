@@ -1,38 +1,38 @@
 ---
 header-includes:
-   - \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
-   - \usepackage{listings}
-   - \usepackage[skins]{tcolorbox}
-   - \usepackage{float}
-   - \usepackage{multicol}
-   - \usepackage{graphicx}
-   - \usepackage{lastpage}
-   - \usepackage{fancyhdr}
-   - \pagestyle{fancy}
-   - \fancyhf{}
-   - \lhead{Use of R in Official Statistics - uRos2018}
-   - \rhead{6th international conference, The Hague, September 2018}
-   - \usepackage[numbered]{bookmark}
-   - \usepackage{hyperref}
-   - \hypersetup{
-     pdftitle={Tutorial - Spatial Analysis in R with Open Geodata - uRos2018},
-     pdfauthor={Egge-Jan Pollé and Willy Tadema}
-     }
-   - \hypersetup{linkcolor = {blue}, urlcolor = {blue}}
-   - \renewcommand{\footrulewidth}{0.4pt}
-   - \fancyfoot{}
-   - \fancyfoot[l]{\titletxt}
-   - \fancyfoot[r]{Page \thepage\ of \pageref*{LastPage}}
-   - \usepackage{fvextra}
-   - \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
-   - \usepackage{xcolor}
-   - \definecolor{grey}{rgb}{0.8,0.8,0.8}
-   - \usepackage{enumitem}
-   - \renewcommand{\figurename}{Figure}
-output: 
+- \providecommand{\titletxt}{Tutorial - Spatial Analysis in R with Open Geodata}
+- \usepackage{listings}
+- \usepackage[skins]{tcolorbox}
+- \usepackage{float}
+- \usepackage{multicol}
+- \usepackage{graphicx}
+- \usepackage{lastpage}
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhf{}
+- \lhead{Use of R in Official Statistics - uRos2018}
+- \rhead{6th international conference, The Hague, September 2018}
+- \usepackage[numbered]{bookmark}
+- \usepackage{hyperref}
+- \hypersetup{ pdftitle={Tutorial - Spatial Analysis in R with Open Geodata - uRos2018},
+  pdfauthor={Egge-Jan PollÃ© and Willy Tadema} }
+- \hypersetup{linkcolor = {blue}, urlcolor = {blue}}
+- \renewcommand{\footrulewidth}{0.4pt}
+- \fancyfoot{}
+- \fancyfoot[l]{\titletxt}
+- \fancyfoot[r]{Page \thepage\ of \pageref*{LastPage}}
+- \usepackage{fvextra}
+- \DefineVerbatimEnvironment{Highlighting}{Verbatim}{breaklines,commandchars=\\\{\}}
+- \usepackage{xcolor}
+- \definecolor{grey}{rgb}{0.8,0.8,0.8}
+- \usepackage{enumitem}
+- \renewcommand{\figurename}{Figure}
+mainfont: Calibri
+output:
   pdf_document:
     latex_engine: lualatex
-mainfont: Calibri
+  html_document:
+    df_print: paged
 urlcolor: blue
 ---
 
@@ -40,7 +40,7 @@ urlcolor: blue
 \newpage
 
 ```{r setup, include=FALSE, cache = FALSE}
-knitr::opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE,echo = TRUE)
+knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE, strip.white = FALSE, echo = TRUE)
 knitr::opts_chunk$set(error = TRUE)
 ```
 
@@ -212,7 +212,7 @@ Our dataset is now both a `data.frame` and an `sf` object, with all the convenie
 
 \newpage
 
-And when we plot the data to the screen we ca see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
+And when we plot the data to the screen we can see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
 
 ```{r}
 NL_Airports
@@ -233,7 +233,7 @@ plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
 
 ## Interactive Viewing of Spatial Data in R
 
-Until now you have seen some static maps plotted o the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
+Until now you have seen some static maps plotted on the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
 
 In this paragraph we will look at two of these.
 
@@ -289,7 +289,7 @@ st_write(NL_Airports, "NL_Airports.geojson")
 
 In this chapter we will learn how to download, to unzip and to load shapefiles \textbf{using R}. There will be no need to use your web browser, your file explorer or a zip utility - the whole process can be completed using just a few lines of R code.
 
-The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapfile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consits of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
+The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapefile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consists of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
 
 The shapefile format has been developed by \href{https://www.esri.com/}{Esri} and over the years has become a \textit{de facto} standard for data interoperability among Esri and other GIS software products.
 
@@ -301,68 +301,42 @@ It is not uncommon for public organizations - including national statistical ins
 
 ## Download and unzip the shapefile
 
-```{r eval=FALSE}
-# Set the working directory
-setwd("C:/uRos2018")
+```{r results = 'hide'}
 # Store the URL to the file to download in a variable
 URL2zip <- "http://data.statistik.gv.at/data/OGDEXT_GEM_1_STATISTIK_AUSTRIA_20180101.zip"
-print(URL2zip)
-# Extract the filename from this URL
-zip_file <- file.path(basename(URL2zip))
-print(zip_file)
-# Create a subfolder in your working directory to store the data
-dir.create("./Data", showWarnings = FALSE)
-# store the path to the current working directory in a variable
-workdir <- getwd()
-# switch to the data folder you just created
-setwd("./Data")
+
+# Create a temporary file 
+zip_file <- tempfile(fileext = ".zip")
+
 # Download the file
 download.file(URL2zip, destfile = zip_file, mode = "wb")
-# unzip the file
-unzip(zip_file)
-# after unzipping you can delete (i.e. unlink) the file
+
+# Create a subfolder in your working directory to store the unzipped data
+dir.create("./Data", showWarnings = FALSE)
+
+# Unzip the file
+unzip(zip_file, exdir = "./Data")
+      
+# After unzipping you can delete (i.e. unlink) the file
 unlink(zip_file)
-# Return to the original working directory
-setwd(workdir)
-# remove variables you do not longer need
-rm(URL2zip,zip_file,workdir)
+
+# Remove variables you do not longer need
+rm(URL2zip, zip_file)
 ```
 
-```{r echo=FALSE}
-setwd("C:/uRos2018")
-URL2zip <- "http://data.statistik.gv.at/data/OGDEXT_GEM_1_STATISTIK_AUSTRIA_20180101.zip"
-zip_file <- file.path(basename(URL2zip))
-dir.create("C:/uRos2018/Data", showWarnings = FALSE)
-setwd("C:/uRos2018/Data")
-download.file(URL2zip, destfile = zip_file, mode = "wb")
-unzip(zip_file)
-unlink(zip_file)
-setwd("C:/uRos2018")
-```
+\newpage
 
 ## Load the shapefile
 
-
-```{r eval=FALSE}
+```{r results = 'hide'}
 library(sf)
 library(tmap)
 AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 ```
 
-```{r echo=FALSE}
-library(sf)
-library(tmap)
-AUSTRIA_GEM_20180101 <- st_read("C:/uRos2018/Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
-```
-
-```{r eval=FALSE}
+```{r map_austria}
 qtm(AUSTRIA_GEM_20180101)
 ```
-
-```{r echo=FALSE}
-qtm(AUSTRIA_GEM_20180101)
-```
-
 
 
 \newpage
@@ -391,11 +365,11 @@ On the contrary, the GeoJSON standard clearly defines several types of JSON obje
 
 In general **GDAL**, the translator library behind the `sf` functions `st_read()` and `st_write` (see chapter \ref{simple_features}), gives better results with GeoJSON as opposed to GML.
 
-So, in the exercises in this manual, when accessing a WFS service o retrieve data, we will always add the parameter `outputFormat=application/json`.
+So, in the exercises in this manual, when accessing a WFS service to retrieve data, we will always add the parameter `outputFormat=application/json`.
 
 ## Access a WFS service: `request=GetCapabilities` \label{GCnl}
 
-In general, organisations publishing data using WFS, will provide you with a URL to their WFS server which also contains a `GetCapabilities` reguest. Once you know the **capabilities** of the service (i.e. once you know what is on offer) you can start building your own request to the server.
+In general, organisations publishing data using WFS, will provide you with a URL to their WFS server which also contains a `GetCapabilities` request. Once you know the **capabilities** of the service (i.e. once you know what is on offer) you can start building your own request to the server.
 
 In the exercises below we will use data on the municipal division in the Netherlands. These data are offered by the host of this conference, the Dutch statistical office, through [Publieke Dienstverlening op de Kaart](https://www.pdok.nl/) (PDOK) and the [Nationaal Georegister](http://www.nationaalgeoregister.nl/) (NGR).
 
@@ -418,11 +392,11 @@ We will start with a simple request to download a full feature collection withou
 
 In the script below we use the `httr` package. This allows us to store the different parameters of our request in a list, only to build the full URL at the end. We do so for readability reasons and to allow for easy modification of our request at a later stage if necessary. And the function `build_url()` will return a properly encoded URL.
 
-A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapalities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
+A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapabilities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
 
-What we are intersted in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
+What we are interested in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
 
-Aslso, do not forget to add a parameter to ask for output in GeoJSON format (as discussed in paragraph \ref{gmlGEOJSON}).
+Also, do not forget to add a parameter to ask for output in GeoJSON format (as discussed in paragraph \ref{gmlGEOJSON}).
 
 This is the script to populate the full request:
 
@@ -450,7 +424,7 @@ The variable `request` will now contain this [link](https://geodata.nationaalgeo
 
 Now we want to feed this response directly into R, like this:
 
-```{r}
+```{r results = 'hide'}
 NL_Municipalities2017 <- st_read(request)
 ```
 
@@ -458,18 +432,15 @@ NL_Municipalities2017 <- st_read(request)
 Have a look at the result:
 
 ```{r}
-
 qtm(NL_Municipalities2017)
-
 head(NL_Municipalities2017)
-
 ```
 \newpage
 
 ### `request=GetFeature` - an example from Finland
 
 
-In this paragraph we will retrieve data from [Tilastokeskus (Statistics Finland)](http://www.stat.fi/). In the english section of their website we found a nice dataset: [Population by municipality-based units](http://www.stat.fi/org/avoindata/paikkatietoaineistot/vaesto_tilastointialueittain_en.html).
+In this paragraph we will retrieve data from [Tilastokeskus (Statistics Finland)](http://www.stat.fi/). In the English section of their website we found a nice dataset: [Population by municipality-based units](http://www.stat.fi/org/avoindata/paikkatietoaineistot/vaesto_tilastointialueittain_en.html).
 
 
 \begin{multicols}{2}
@@ -504,16 +475,13 @@ url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
                          outputFormat = "application/json")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
-
 ```
 
 The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
-```{r}
+```{r results = 'hide'}
 FI_Municipalities2018_Pop2017 <- st_read(request)
 ```
 \newpage
@@ -528,7 +496,7 @@ Optionally, you can have a look at the attribute data in the **Data Viewer**: `V
 
 \begin{multicols}{2}
 
-With some basic knowledge of the Finnish language you should now be able to calculate that Finland had more ore less 5.5 million inhabitants in 2017 - of which more or less 50 percent are males, and the other half females:
+With some basic knowledge of the Finnish language you should now be able to calculate that Finland had more or less 5.5 million inhabitants in 2017 - of which more or less 50 percent are males, and the other half females:
 
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
 \begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=Finnish for Data Scientists: some useful words]
@@ -591,14 +559,12 @@ url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
                          outputFormat = "application/json")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
 ```
-The variable `reques` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&count=5&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
+The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&count=5&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 \newpage
 
-### Limit the number of columns returned: the `PropetyName` parameter
+### Limit the number of columns returned: the `PropertyName` parameter
 
 To restrict a `GetFeature` request by attribute rather than feature, use the `PropertyName` parameter. You can specify a single attribute, or multiple attributes separated by commas.
 
@@ -619,13 +585,8 @@ url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
                          outputFormat = "application/json")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
-
 ```
 The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
-
-\newpage
 
 ## Further reading
 
@@ -658,7 +619,7 @@ The OGC offers an official tutorial module - [OGC E-learning](http://cite.openge
 
 In this chapter we will learn how \textbf{to use R as a client to access data using an ArcGIS REST Service}. We will be accessing ArcGIS Server to retrieve Feature Layers using the \href{https://developers.arcgis.com/rest/}{ArcGIS REST API}. This API is part of ArcGIS Online,  the "complete SaaS mapping platform" by the American GIS company \href{https://www.esri.com/en-us/home}{Esri}. And as part of this platform Esri has launched the \href{https://livingatlas.arcgis.com/en/}{ArcGIS Living Atlas of the World}\footnote{Some background information on the Living Atlas of the World can be found in this \href{http://www.esri.com/esri-news/arcuser/summer-2015/welcome-to-the-living-atlas-of-the-world}{article}, where Esri also invites YOU to \textit{"Become a user and a contibutor"}.}
 
-Some datasets in this Living Atlas are Open Data. Some, but by no means all, as many datasets are only accessible via an ArcGIS Online organizational account. But in cases where the source data is already Open Data, Esi publishes the data under the same conditions.
+Some datasets in this Living Atlas are Open Data. Some, but by no means all, as many datasets are only accessible via an ArcGIS Online organizational account. But in cases where the source data is already Open Data, Esri publishes the data under the same conditions.
 
 \includegraphics{Images/living-atlas-logo-size-4.png}
 
@@ -666,9 +627,9 @@ Some datasets in this Living Atlas are Open Data. Some, but by no means all, as 
 
 ## Exploring data in the ArcGIS Living Atlas of the World
 
-Afer some browsing through the content of the Living Atlas we have found a nice (and open) dataset for this exercise: the **Feature Layer** *USA States (Generalized)*. An overview page with metadata for the dataset we have chosen can be found via this [link](https://www.arcgis.com/home/item.html?id=99fd67933e754a1181cc755146be21ca#overview) (see Figure \ref{USA_States_AGOL_Metadata}). 
+After some browsing through the content of the Living Atlas we have found a nice (and open) dataset for this exercise: the **Feature Layer** *USA States (Generalized)*. An overview page with metadata for the dataset we have chosen can be found via this [link](https://www.arcgis.com/home/item.html?id=99fd67933e754a1181cc755146be21ca#overview) (see Figure \ref{USA_States_AGOL_Metadata}). 
 
-Before actually importing the data into R, you can expore the dataset - both the geometry and the attribute data - in the [ArcGIS Online Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=99fd67933e754a1181cc755146be21ca) (see Figure \ref{USA_States_AGOL_MapViewer}).
+Before actually importing the data into R, you can explore the dataset - both the geometry and the attribute data - in the [ArcGIS Online Map Viewer](https://www.arcgis.com/home/webmap/viewer.html?useExisting=1&layers=99fd67933e754a1181cc755146be21ca) (see Figure \ref{USA_States_AGOL_MapViewer}).
 
 ## Query the Feature Service
 
@@ -682,8 +643,8 @@ One of the **Supported Operations** for this layer is **Query**. The *Query* pag
 
 Let's try to build a request to retrieve the full dataset:
 
-* The first parameter is `where`. It is obligatory and cannot be ommited. If there is no *where-clause* (i.e. if you want to extract the full dataset) you have to populate this parameter with the value `1=1` (which is - of course - always true...)
-* To get all the attribute columns you to give the parameter `outFields` the value `*`
+* The first parameter is `where`. It is obligatory and cannot be omitted. If there is no *where-clause* (i.e. if you want to extract the full dataset) you have to populate this parameter with the value `1=1` (which is - of course - always true...)
+* To get all the attribute columns you have to give the parameter `outFields` the value `*`
 * To retrieve the spatial data the parameter `returnGeomatry` should be set to `true`
 * And the outputformat - `f` - is set to `geojson`
 
@@ -726,15 +687,13 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
                          f = "geojson")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
 ```
 
 The variable `request` will now contain this [link](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=%2A&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
 Now we want to feed this response directly into R, like this:
 
-```{r}
+```{r results = 'hide'}
 USA_States_2017 <- st_read(request)
 ```
 
@@ -782,9 +741,6 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
                          f = "geojson")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
-
 ```
 
 The variable `request` will now contain this [link](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=POPULATION%3E10000000&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
@@ -792,7 +748,7 @@ The variable `request` will now contain this [link](https://services.arcgis.com/
 
 ### Limit the number of columns returned: the `outFields` parameter
 
-If you do not need all attribute columns of a dataset in your analysis, you can limit the number of columns returned by specifyng the `outFields` parameter. You can specify a single attribute, or multiple attributes separated by commas.
+If you do not need all attribute columns of a dataset in your analysis, you can limit the number of columns returned by specifying the `outFields` parameter. You can specify a single attribute, or multiple attributes separated by commas.
 
 The `query` request below only returns the geometry and the columns STATE_NAME and POPULATION for the United States:
 
@@ -810,9 +766,6 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
                          f = "geojson")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
-
 ```
 
 The variable `request` will now contain this [link](https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_States_Generalized/FeatureServer/0/query?where=1%3D1&outFields=STATE_NAME%2CPOPULATION&returnGeometry=true&f=geojson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
@@ -835,40 +788,26 @@ In this chapter we will load Dutch statistical data directly into R, using the p
 
 ## the package `cbsodataR`
 
-The package `cbsodaataR` can be found on CRAN: [https://cran.r-project.org/package=cbsodataR](https://cran.r-project.org/package=cbsodataR)
+The package `cbsodataR` can be found on CRAN: [https://cran.r-project.org/package=cbsodataR](https://cran.r-project.org/package=cbsodataR)
 
-```{r echo = FALSE}
-library(cbsodataR)
-options(scipen=999)
-
-total_no_entries <- nrow(cbs_get_toc())
-```
-
-
-The table of contents can be retrieved with the fucnction `cbs_get_toc()`. As we browse through the table of content we do see a total of `r total_no_entries` entries. For most datasets all the metadata is in Dutch, but for some of them this information is also available in English.
-
-```{r echo = FALSE}
-library(cbsodataR)
-options(scipen=999)
-
-toc_en <- cbs_get_toc(Language="en")
-total_no_entries_en <- nrow(toc_en)
-```
-
-When we split the TOC by language we do see that currently `r total_no_entries_en` datasets are available with metadata in English. These 'English' datasets are actually copies of their Dutch equivalents. (Maybe overtime all tables will be available with a description in English?)
-
-This is a wealth of information, and all these datasets can be directly loaded into R. In the next paragraph we will do some exercises with one particular table.
-
-```{r}
+```{r table_of_contents, echo = FALSE, results = 'hide'}
 library(cbsodataR)
 
 toc <- cbs_get_toc()
 nrow(toc)
-toc_nl <- cbs_get_toc(Language="nl")
+toc_nl <- cbs_get_toc(Language = "nl")
 nrow(toc_nl)
-toc_en <- cbs_get_toc(Language="en")
+toc_en <- cbs_get_toc(Language = "en")
 nrow(toc_en)
+```
 
+The table of contents can be retrieved with the function `cbs_get_toc()`. As we browse through the table of contents we do see a total of `r nrow(toc)` entries. For most datasets all the metadata is in Dutch, but for some of them this information is also available in English.
+
+When we split the TOC by language we do see that currently `r nrow(toc_en)` datasets are available with metadata in English. These 'English' datasets are actually copies of their Dutch equivalents. (Maybe overtime all tables will be available with a description in English?)
+
+This is a wealth of information, and all these datasets can be directly loaded into R. In the next paragraph we will do some exercises with one particular table.
+
+```{r ref.label = 'table_of_contents'}
 ```
 
 \newpage
@@ -877,12 +816,12 @@ nrow(toc_en)
 
 ### Preparing the data
 
-The table we have chosen for the exercises in this paragraph is called 'Regionale kerncijfers Nederland', i.e. Regeional statistical data about the Netherlands.
+The table we have chosen for the exercises in this paragraph is called 'Regionale kerncijfers Nederland', i.e. regional statistical data about the Netherlands.
 The identifier of this table is **70072ned**. It is a huge table containing data at 5 regional levels - from the country as a whole down to the municipal level - from 1995 up to the current year.
 
-The table can be retrieved with the fucnction `cbs_get_data()`:
+The table can be retrieved with the function `cbs_get_data()`:
 
-```{r eval=FALSE}
+```{r eval = FALSE}
 NL_Regional_Statistics2017 <- cbs_get_data('70072ned')
 ```
 
@@ -899,19 +838,28 @@ library(stringr)
 ```
 
 ```{r}
-NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% select(RegioS,Perioden,TotaleBevolking_1,Code_291,Naam_292,Code_293,Naam_294)
+NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% select(RegioS, Perioden, TotaleBevolking_1, Code_291, Naam_292, Code_293, Naam_294)
 ```
 
 The first two columns - `RegioS` and `Perioden` - are categorical columns, i.e. they contain codes. The labels for these columns can be added with the function `cbs_add_label_columns()`:
 
 ```{r}
-NL_Regional_Statistics2017 <- NL_Regional_Statistics2017 %>% cbs_add_label_columns()
+NL_Regional_Statistics2017 <- cbs_add_label_columns(NL_Regional_Statistics2017)
 ```
 
 We will now rename the columns of our table for further use in the exercise:
 
 ```{r}
-names(NL_Regional_Statistics2017) <- c("Code","Name","Year","Year_label","Total_population","Region_code","Region_name","Province_code","Province_name")
+NL_Regional_Statistics2017 <- rename(NL_Regional_Statistics2017, 
+                                     Code = RegioS, 
+                                     Name = RegioS_label,
+                                     Year = Perioden,
+                                     Year_label = Perioden_label,
+                                     Total_population = TotaleBevolking_1,
+                                     Region_code = Code_291,
+                                     Region_name = Naam_292,
+                                     Province_code = Code_293,
+                                     Province_name = Naam_294)
 ```
 Each column has a label. To avoid issues later on in this exercise, we will remove these labels now:
 
@@ -925,7 +873,6 @@ Let's have a first look at the table:
 
 ```{r}
 head(NL_Regional_Statistics2017)
-
 ```
 
 In the first row we can see the total number of inhabitants in the Netherlands on January 1st, 2017, which is: **17,081,507**.
@@ -945,11 +892,8 @@ This is weird, isn't it? The string 'Noord-Nederland' - which is only 15 charate
 Let's fix this issue with the function `trimws()` for the columns concerned:
 
 ```{r}
-NL_Regional_Statistics2017$Code <- as.factor(trimws(NL_Regional_Statistics2017$Code))
-NL_Regional_Statistics2017$Region_code <- as.factor(trimws(NL_Regional_Statistics2017$Region_code))
-NL_Regional_Statistics2017$Region_name <- as.factor(trimws(NL_Regional_Statistics2017$Region_name))
-NL_Regional_Statistics2017$Province_code <- as.factor(trimws(NL_Regional_Statistics2017$Province_code))
-NL_Regional_Statistics2017$Province_name <- as.factor(trimws(NL_Regional_Statistics2017$Province_name))
+cols <- c('Code', 'Region_code', 'Region_name', 'Province_code', 'Province_name')
+NL_Regional_Statistics2017[cols] <- sapply(NL_Regional_Statistics2017[cols], function(x){trimws(x) %>% as.factor()})
 ```
 
 ```{r}
