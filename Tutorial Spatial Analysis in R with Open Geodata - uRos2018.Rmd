@@ -51,7 +51,7 @@ knitr::opts_chunk$set(error = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.3.8 - August 19, 2018
+Version 0.4.1 - August 19, 2018
 
 \begin{multicols}{2}
 
@@ -70,12 +70,17 @@ This is the manual for a tutorial session to be delivered on Wednesday 12 Septem
 
 \end{multicols}
 
+
 [^1]: https://www.linkedin.com/in/ejhpolle/
 [^2]: https://www.linkedin.com/in/willytadema/
 
 ##Course material available on GitHub
 
 The URL of this repository: [https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata](https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata)
+
+ \begin{figure}[b]
+\includegraphics{Images/Frontpage.png}
+\end{figure}
 
 \newpage
 \newpage
@@ -267,7 +272,13 @@ To be able to view your spatial data interactively you will first have to load t
 library(tmap)
 ```
 
+\newpage
 
+## `st_write()`
+
+```{r}
+st_write(NL_Airports, "NL_Airports.geojson")
+```
 \newpage
 
 # Accessing Geospatial Vector Data over the Internet {-}
@@ -819,9 +830,25 @@ In this chapter we will load Dutch statistical data directly into R, using the p
 
 The package `cbsodaataR` can be found on CRAN: [https://cran.r-project.org/package=cbsodataR](https://cran.r-project.org/package=cbsodataR)
 
-The table of contents can be retrieved with the fucnction `cbs_get_toc()`. As we browse through the table of content we do see a total of 4418 entries. For most datasets all the metadata is in Dutch, but for some of them this information is also available in English.
+```{r echo = FALSE}
+library(cbsodataR)
+options(scipen=999)
 
-When we split the TOC by language we do see that currently 698 datasets are available with metadata in English. These 'English' datasets are actually copies of their Dutch equivalents. (Maybe overtime all tables will be available with a description in English?)
+total_no_entries <- nrow(cbs_get_toc())
+```
+
+
+The table of contents can be retrieved with the fucnction `cbs_get_toc()`. As we browse through the table of content we do see a total of `r total_no_entries` entries. For most datasets all the metadata is in Dutch, but for some of them this information is also available in English.
+
+```{r echo = FALSE}
+library(cbsodataR)
+options(scipen=999)
+
+toc_en <- cbs_get_toc(Language="en")
+total_no_entries_en <- nrow(toc_en)
+```
+
+When we split the TOC by language we do see that currently `r total_no_entries_en` datasets are available with metadata in English. These 'English' datasets are actually copies of their Dutch equivalents. (Maybe overtime all tables will be available with a description in English?)
 
 This is a wealth of information, and all these datasets can be directly loaded into R. In the next paragraph we will do some exercises with one particular table.
 
@@ -894,7 +921,7 @@ head(NL_Regional_Statistics2017)
 
 ```
 
-In the first row we can see the total number of inhabitants in the Netherlands on January 1st, 2017, which is: *17,081,507*.
+In the first row we can see the total number of inhabitants in the Netherlands on January 1st, 2017, which is: **17,081,507**.
 
 And wait, we notice something else: some columns seem to have a fixed width. For example, the columns `Code` and  `Region_name`:
 
@@ -947,24 +974,29 @@ Eurostat even created a nice video on the topic: \url{https://youtu.be/a4Y-hCQ-K
 
 ### Extracting NUTS 1 and NUTS 2 regions
 
-Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively
+Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively. At NUTS 1 level the Neherlands is divided into 4 regions ('Landsdelen') and at NUTS 2 level into 12 provinces:
 
 ```{r}
 
 NL_Regions2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "LD")
 NL_Provinces2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "PV")
-
-# Make sure to drop unused levels from the factors in those new data.frames (which are subsets of a larger data.frame)
-NL_Regions2017_data <- droplevels(NL_Regions2017_data)
-NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
-
 ```
+
+Please note: these new data frames inherit factor levels from the original data frame from which they are created. Use the **RStudio Environment pane**, to confirm that - for example - the `Name` column of the `NL_Provinces2017_data` table is now a Factor with 770 levels, whereas there are only 12 provinces. So you have to drop unused levels before you can use the new subsets for further analysis:
 
 ```{r}
-NL_Provinces2017_data
+# Make sure to drop unused levels from the factors in those new data.frames
+NL_Regions2017_data <- droplevels(NL_Regions2017_data)
+NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
 ```
 
-We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of it (but let's make sure it remains a factor):
+\newpage
+
+```{r}
+as.data.frame(NL_Provinces2017_data[,c(1,2,5,6,7)])
+```
+
+We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of this suffix, while making sure that the column remains a factor:
 
 ```{r}
 NL_Provinces2017_data$Name <- as.factor(str_replace(NL_Provinces2017_data$Name," \\(PV\\)", ""))
@@ -972,10 +1004,9 @@ NL_Provinces2017_data$Name <- as.factor(str_replace(NL_Provinces2017_data$Name,"
 
 Likewise, the region names in the column `Name` all have the suffix *(LD)*. We will also remove that:
 
-
 ````{r}
+as.data.frame(NL_Regions2017_data[,c(1,2,5)])
 NL_Regions2017_data$Name <- as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
-NL_Regions2017_data
 ```
 
 \newpage
@@ -992,7 +1023,7 @@ barplot(NL_Provinces2017_data$Total_population) # Try this yourself - result not
 
 This returns a very basic plot, with no labels and no title, so not very useful.
 
-Use `?barplot()` to see what arguments you can use. After some trial and error you might come to a statement like this:
+Use `?barplot()` to see what arguments we can use. After some trial and error we might come to a statement like this:
 
 ```{r exbplot2}
 barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Name, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
@@ -1026,14 +1057,15 @@ Based on the plots in the previous sections we might think that almost half the 
   
 To confirm this hypothesis we will create a pie chart with the population by region.
 
-
-
-Create a pie chart:
+This basic statement will create a simple pie chart:
 ```{r}
 pie(NL_Regions2017_data$Total_population, labels = NL_Regions2017_data$Name)
 ```
+And yes, almost half of the Dutch population lives in West-Nederland.
 
 \newpage
+
+The pie chart on the previous page already confirmed what we wanted to know. But of course - with a little extra effort - we can improve the quality of the graph by adding a title, calculating the actual percentages and using the same colors for the regions as we did in the barplot:
 
 ```{r}
 pct <- round(NL_Regions2017_data$Total_population/sum(NL_Regions2017_data$Total_population)*100, 1)
@@ -1042,7 +1074,7 @@ lbls <- paste(NL_Regions2017_data$Name, "\n", pct)
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
 pie(NL_Regions2017_data$Total_population, labels = lbls, clockwise = TRUE,
 cex = .8, col = NL_Regions2017_data$Name, border = "grey",
-main = "Number of Inhabitants by Region - The Netherlands - 2017")
+main = "Percentage of Inhabitants by Region - The Netherlands - 2017")
 ```
 
 ```{r echo = FALSE, results = 'hide', message = FALSE}
@@ -1054,16 +1086,38 @@ palette("default")
 ### Extracting municipal data
 
 
-```{r}
+Now we will extract the municipalities from `NL_Regional_Statistics2017`
 
+```{r}
 NL_Municipalities2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "GM")
+nrow(NL_Municipalities2017_data)
+```
+Are there 713 municipalities in the Netherlands? No, not anymore!
+There used to be much more: in 1850 there were more or less 1200 municipalities. But today there are much less: the current (2018) amount is 380. The Netherlands has a long standing tradition of grouping smaller municipalities into larger ones. This is a slow process, but each year on the 1^st of January the number of municipalities diminishes again.
+
+We are looking at 2017, and in that year there were still 388 municipalities.
+
+The table we have accessed contains data from 1995 up to today. And apparently in that year there were still 713 municipalities.
+
+We can filter out the municipalities that do no longer exist by removing the ones without data. Here we use the column `Total_population` to check for that:
+
+```{r}
 NL_Municipalities2017_data <- NL_Municipalities2017_data %>% filter(Total_population != "")
+nrow(NL_Municipalities2017_data)
+```
+
+And of course we should also drop unused factor levels:
+```{r}
 NL_Municipalities2017_data <- droplevels(NL_Municipalities2017_data)
 ```
 
+\newpage
+
 ### Merging sf and data.frame objects
 
-As we have done in paragraph \ref{GFnl}
+Now we want to plot a map with the regional subdivision. To be abel to do so we have to merge our data frame with a dataset containing geometry.
+
+We will access a WFS server to download the municipal geometry - for the year 2017! - as we have done in paragraph \ref{GFnl}:
 
 ```{r}
 # NL: Example with Dutch data
@@ -1086,13 +1140,25 @@ NL_Municipalities2017 <- st_read(request)
 ```
 
 
-Have a look at the result:
+As we do not need all attribute columns, we will select only the relevant ones:
 
 ```{r}
 NL_Municipalities2017 <- NL_Municipalities2017 %>% select(statcode,statnaam)
+```
 
+Please note: in the statement above we only select 2 columns, but the reulting object does also contain the `geometry`column. This is due to the *sticky* character of this `geometry` column. When you select a subset of columns, the geometry will always be included, unless you explicitly drop it. In other words: a subset of an `sf` object will in itself also be an `sf` object.
+
+
+Now we will rename the columns:
+
+```{r}
 names(NL_Municipalities2017)[1:2] <- c("Code","Name")
 
+```
+
+Both datasets do contain a column with municipal codes, so now you can merge them, like you would do with any two data frames:
+
+```{r}
 NL_Municipalities2017 <- merge(NL_Municipalities2017,NL_Municipalities2017_data, by = "Code")
 
 class(NL_Municipalities2017)
@@ -1100,6 +1166,8 @@ class(NL_Municipalities2017)
 \newpage
 
 ### `qtm()`
+
+And now we can plot our map with NUTS 1 regions, again using the same colors as before:
 
 ```{r}
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
@@ -1117,49 +1185,63 @@ qtm(shp = NL_Municipalities2017,
 
 \tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
 \begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\Large{Factors in R}]
-Conceptually, factors are variables in R which can only contain a pre-defined set of values, known as levels. Factors are often referred to as categorical variables, which can either be ordered (e.g. 'low', 'medium', 'high') or unordered (e.g. 'male', 'female').\par
-One of the most important uses of factors is in statistical analysis and plotting. Storing categorical variables as factors insures that the statistical modeling functions will treat such data correctly. Factors are stored in R as a vector of integers, with a corresponding set of labels. These labels - one for each level - are used when the factor is displayed.\par
+Conceptually, factors are variables in R which can only contain a pre-defined set of values, known as levels. Factors are often referred to as \textit{categorical variables}, which can either be \textbf{ordered} (e.g. 'low', 'medium', 'high') or \textbf{unordered} (e.g. 'male', 'female').\\
+\\
+One of the most important uses of factors is in statistical analysis and plotting. Storing categorical variables as factors insures that the statistical modeling functions will treat such data correctly. Factors are stored in R as a vector of integers, with a corresponding set of labels. These labels - one for each level - are used when the factor is displayed.\\
+\\
 When data are being loaded into R, for example with the function \textbf{read.csv()}, all columns containing text (character data) will be automatically converted to factors. While this is very useful in many cases, there might also be situations where you will want to treat your data as continuous variables.
 \end{tcolorbox}
 
-## Factor: group municipalities into categories
+## Factor: group municipalities into categories \label{parFactor}
 
-In this exercise we will divide our municipalities in 3 groups: small, medium and large.
+In a previous exercise we have learned that there is an ongoing process of municipal regrouping in the Netherlands. Let's investigate opportunities for future regroupings by maping municipalities by size.
+
+We will start this exercise by dividin our municipalities in 3 groups: small, medium and large.
 
 A small municipality has less than 50,000 inhabitants, a medium sized one has between 50,000 and 200,000, whereas a municipality with more than 200,000 inhabitants is considered to be large.
 
 
 ```{r ordered_factor}
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 50000] <- "Small"
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 50000 & NL_Municipalities2017$Total_population < 200000] <- "Medium"
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 200000] <- "Large"
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 50000] <- "Small population"
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 50000 & NL_Municipalities2017$Total_population < 200000] <- "Medium population"
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 200000] <- "Large population"
 ```
 
 ```{r ordered_factor2}
 class(NL_Municipalities2017$Category)
+```
 
-NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Small","Medium","Large"), ordered = TRUE)
+Now we will create an ordered factor with 3 levels:
+
+```{r}
+NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Small population","Medium population","Large population"), ordered = TRUE)
 
 class(NL_Municipalities2017$Category)
 ```
 ```{r change_categories, echo = FALSE, results = 'hide', message = FALSE}
 NL_Municipalities2017$Category <- as.character(NL_Municipalities2017$Category)
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 20000] <- "Very small"
-NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Very small","Small","Medium","Large"), ordered = TRUE)
+NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 20000] <- "Very small population"
+NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Very small population","Small population","Medium population","Large population"), ordered = TRUE)
 ```
 
+\newpage
+
+And now we can plot our map.
+
+Please note: in the map printed below there are not 3 categories, but 4. We have added a category 'very small' for municipalities with less than 20,000 inhabitants.
+
+Question:
+
+What steps do you need to take to add a new factor level after factors have been defined?
+
+As you can see there is still some potential to cluster very small municipalities together. But of course, this will be more a political than a scientific issue.
 
 
 ```{r tmapcategories}
-qtm(shp = NL_Municipalities2017, title= "Municipalities by Size",
+qtm(shp = NL_Municipalities2017, title= "Municipalities by Population Size",
     fill = "Category", fill.title = "The Netherlands - 2017\nCategory", borders = "grey", format = "NLD_wide")
 ```
 
-Please note: in the map printed above there are not 3 categories, but 4. We have added a category 'very small' for municipalities with less than 20,000 inhabitants.
-
-Challenge:
-
-What steps do you need to take to add a new factor level after factors have been defined?
 
 
 \newpage
