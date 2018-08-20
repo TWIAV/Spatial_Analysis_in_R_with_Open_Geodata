@@ -51,7 +51,7 @@ knitr::opts_chunk$set(error = TRUE)
 **Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
 **Willy Tadema** - Provincie Groningen[^2]
 
-Version 0.4.1 - August 19, 2018
+Version 0.4.5 - August 20, 2018
 
 \begin{multicols}{2}
 
@@ -328,7 +328,7 @@ rm(URL2zip, zip_file)
 
 ## Load the shapefile
 
-```{r results = 'hide'}
+```{r}
 library(sf)
 library(tmap)
 AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
@@ -386,15 +386,11 @@ We are not going to study this XML response line-by-line. Not now. But please le
 
 ### `request=GetFeature` - an example from the Netherlands \label{GFnl}
 
-A WFS server responding to a *GetFeature* request returns a collection of geographic feature instances filtered according to a criteria set by the requesting client.
-
-We will start with a simple request to download a full feature collection without any constraints to filter the content by. The GetFeature request queries the server with a set of parameters, which are concatenated to the URL with an *ampersand* (&).
+A WFS server responding to a *GetFeature* request returns a collection of geographic feature instances filtered according to a criteria set by the requesting client. We will start with a simple request to download a full feature collection without any constraints to filter the content by. The GetFeature request queries the server with a set of parameters, which are concatenated to the URL with an *ampersand* (&).
 
 In the script below we use the `httr` package. This allows us to store the different parameters of our request in a list, only to build the full URL at the end. We do so for readability reasons and to allow for easy modification of our request at a later stage if necessary. And the function `build_url()` will return a properly encoded URL.
 
-A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapabilities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year.
-
-What we are interested in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
+A WFS service can offer one or more feature collections, see the `<FeatureTypeList>` section in the XML response to the `GetCapabilities` request. The service we are accessing here offers quite some feature collections, i.e. multiple regional divisions for the years 1995 up to the current year. What we are interested in here, is the municipal division for the year 2017. After some browsing through the XML response, we have found a `<FeatureType>` with the `<Name>` **cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd**. And that's the value we are giving to the `typename` parameter. (This `typenames` parameter determines the collection of feature instances to return.)
 
 Also, do not forget to add a parameter to ask for output in GeoJSON format (as discussed in paragraph \ref{gmlGEOJSON}).
 
@@ -424,7 +420,7 @@ The variable `request` will now contain this [link](https://geodata.nationaalgeo
 
 Now we want to feed this response directly into R, like this:
 
-```{r results = 'hide'}
+```{r}
 NL_Municipalities2017 <- st_read(request)
 ```
 
@@ -481,7 +477,7 @@ The variable `request` will now contain this [link](https://geo.stat.fi/geoserve
 
 Now we want to feed this response directly into R, like this:
 
-```{r results = 'hide'}
+```{r}
 FI_Municipalities2018_Pop2017 <- st_read(request)
 ```
 \newpage
@@ -693,7 +689,7 @@ The variable `request` will now contain this [link](https://services.arcgis.com/
 
 Now we want to feed this response directly into R, like this:
 
-```{r results = 'hide'}
+```{r}
 USA_States_2017 <- st_read(request)
 ```
 
@@ -999,6 +995,7 @@ And now we can create te barplot like this - with the arguments for the legend p
 ```{r}
 barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Name, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017_data$Region_code, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017_data$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017_data$Region_name), border = 'grey'))
 ```
+
 
 \newpage
 
