@@ -334,7 +334,7 @@ library(tmap)
 AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 ```
 
-```{r map_austria}
+```{r}
 qtm(AUSTRIA_GEM_20180101)
 ```
 
@@ -838,7 +838,8 @@ library(stringr)
 ```
 
 ```{r}
-NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% select(RegioS, Perioden, TotaleBevolking_1, Code_291, Naam_292, Code_293, Naam_294)
+NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% 
+  select(RegioS, Perioden, TotaleBevolking_1, Code_291, Naam_292, Code_293, Naam_294)
 ```
 
 The first two columns - `RegioS` and `Perioden` - are categorical columns, i.e. they contain codes. The labels for these columns can be added with the function `cbs_add_label_columns()`:
@@ -893,7 +894,8 @@ Let's fix this issue with the function `trimws()` for the columns concerned:
 
 ```{r}
 cols <- c('Code', 'Region_code', 'Region_name', 'Province_code', 'Province_name')
-NL_Regional_Statistics2017[cols] <- sapply(NL_Regional_Statistics2017[cols], function(x){trimws(x) %>% as.factor()})
+NL_Regional_Statistics2017[cols] <- sapply(NL_Regional_Statistics2017[cols], 
+                                           function(x){trimws(x) %>% as.factor()})
 ```
 
 ```{r}
@@ -944,20 +946,20 @@ NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
 \newpage
 
 ```{r}
-as.data.frame(NL_Provinces2017_data[,c(1,2,5,6,7)])
+NL_Provinces2017_data %>% select(Code, Name, Total_population, Region_code, Region_name) %>% as.data.frame()
 ```
 
 We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of this suffix, while making sure that the column remains a factor:
 
 ```{r}
-NL_Provinces2017_data$Name <- as.factor(str_replace(NL_Provinces2017_data$Name," \\(PV\\)", ""))
+NL_Provinces2017_data$Name <- str_replace(NL_Provinces2017_data$Name," \\(PV\\)", "") %>% as.factor()
 ```
 
 Likewise, the region names in the column `Name` all have the suffix *(LD)*. We will also remove that:
 
 ````{r}
-as.data.frame(NL_Regions2017_data[,c(1,2,5)])
-NL_Regions2017_data$Name <- as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
+NL_Regions2017_data %>% select(Code, Name, Total_population) %>% as.data.frame()
+NL_Regions2017_data$Name <- str_replace(NL_Regions2017_data$Name," \\(LD\\)", "") %>% as.factor()
 ```
 
 \newpage
@@ -968,7 +970,7 @@ Let's investigate the spread of the Dutch population over the different regions 
 
 The most basic call to the `barplot()` function, is just to provide a column from a dataset and leave all the defaults:
 
-```{r exbplot1, eval=FALSE}
+```{r exbplot1, eval= FALSE}
 barplot(NL_Provinces2017_data$Total_population) # Try this yourself - result not printed in this manual
 ```
 
@@ -992,7 +994,6 @@ We will need 4 different colors for this plot. In the statement below we use the
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
 
 ```
-
 
 And now we can create te barplot like this - with the arguments for the legend provided as a `list`:
 
@@ -1019,13 +1020,12 @@ And yes, almost half of the Dutch population lives in West-Nederland.
 The pie chart on the previous page already confirmed what we wanted to know. But of course - with a little extra effort - we can improve the quality of the graph by adding a title, calculating the actual percentages and using the same colors for the regions as we did in the barplot:
 
 ```{r}
-pct <- round(NL_Regions2017_data$Total_population/sum(NL_Regions2017_data$Total_population)*100, 1)
-pct <- paste0(pct, "%")
+pct <- NL_Regions2017_data$Total_population / sum(NL_Regions2017_data$Total_population) * 100 %>% round(1) %>% paste0("%")
 lbls <- paste(NL_Regions2017_data$Name, "\n", pct)
 palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
 pie(NL_Regions2017_data$Total_population, labels = lbls, clockwise = TRUE,
-cex = .8, col = NL_Regions2017_data$Name, border = "grey",
-main = "Percentage of Inhabitants by Region - The Netherlands - 2017")
+    cex = .8, col = NL_Regions2017_data$Name, border = "grey",
+    main = "Percentage of Inhabitants by Region - The Netherlands - 2017")
 ```
 
 ```{r echo = FALSE, results = 'hide', message = FALSE}
