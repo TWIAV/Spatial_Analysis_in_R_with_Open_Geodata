@@ -6,3 +6,4 @@ Data/*
 
 # Overige data die het script in de projectmap zet
 NL_Airports.geojson
+.Rhistory
