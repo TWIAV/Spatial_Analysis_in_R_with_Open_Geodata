@@ -149,24 +149,23 @@ class(lon)
 Now we will combine these variables into a `data.frame`:
 
 ```{r}
-
 airport <- data.frame(ap, cd, lat, lon, stringsAsFactors = FALSE)
-
 ```
 
 Wait, we have found a CSV file with some more airports:
 
 ```{r}
-NL_Airports <- read.csv("http://www.twiav.nl/files/NL_Airports.csv", stringsAsFactors = FALSE)
+NL_Airports <- 
+  read.csv("http://www.twiav.nl/files/NL_Airports.csv", stringsAsFactors = FALSE)
 
 NL_Airports
-
 ```
 
 Let's add our single airport to this dataset:
 
 ```{r}
-NL_Airports <- rbind(NL_Airports, airport) # Oh yeah, of course: this will generate an error...
+NL_Airports <- rbind(NL_Airports, airport) 
+# Oh yeah, of course: this will generate an error...
 ```
 
 We can easily solve this issue setting the names equal to eachother:
@@ -179,9 +178,7 @@ Now we can `rbind` the two data.frames:
 ```{r}
 NL_Airports <- rbind(NL_Airports, airport)
 NL_Airports
-
 class(NL_Airports)
-
 ```
 
 Now, how do we convert this `data.frame` into an `sf` object? We have got information on the latitude and the longitude of our airports, and we can use this to create geometry, in this case: points.
@@ -191,13 +188,11 @@ Please note: the Coordinate Reference System (CRS) of these lat\\lon coordinates
 Now we can use the function `st_as_sf()` to convert our `data.frame` - with `longitude` first:
 
 ```{r}
-
 library(sf)
 
 NL_Airports <- st_as_sf(NL_Airports, coords = c("longitude","latitude"), crs = 4326)
 
 class(NL_Airports)
-
 ```
 
 Our dataset is now both a `data.frame` and an `sf` object, with all the conveniences which come with this dual status!
@@ -216,15 +211,12 @@ And when we plot the data to the screen we can see the sheer beauty of our **Sim
 
 ```{r}
 NL_Airports
-
 ```
 
 And we can plot our airports like this:
 
 ```{r}
-
 plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
-
 ```
 
 
@@ -271,8 +263,6 @@ To be able to view your spatial data interactively you will first have to load t
 ```{r}
 library(tmap)
 ```
-
-\newpage
 
 ## `st_write()`
 
@@ -334,7 +324,7 @@ library(tmap)
 AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 ```
 
-```{r map_austria}
+```{r}
 qtm(AUSTRIA_GEM_20180101)
 ```
 
@@ -408,12 +398,11 @@ url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs
             query = list(service = "WFS",
                          version = "2.0.0",
                          request = "GetFeature",
-                         typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                         typename = 
+                           "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
                          outputFormat = "application/json")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
 ```
 
 The variable `request` will now contain this [link](https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=cbsgebiedsindelingen%3Acbs_gemeente_2017_gegeneraliseerd&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
@@ -834,7 +823,8 @@ library(stringr)
 ```
 
 ```{r}
-NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% select(RegioS, Perioden, TotaleBevolking_1, Code_291, Naam_292, Code_293, Naam_294)
+NL_Regional_Statistics2017 <- cbs_get_data('70072ned', Perioden = "2017JJ00") %>% 
+  select(RegioS, Perioden, TotaleBevolking_1, Code_291, Naam_292, Code_293, Naam_294)
 ```
 
 The first two columns - `RegioS` and `Perioden` - are categorical columns, i.e. they contain codes. The labels for these columns can be added with the function `cbs_add_label_columns()`:
@@ -860,8 +850,9 @@ NL_Regional_Statistics2017 <- rename(NL_Regional_Statistics2017,
 Each column has a label. To avoid issues later on in this exercise, we will remove these labels now:
 
 ```{r}
-for (i in names(NL_Regional_Statistics2017)) {
-  attr(NL_Regional_Statistics2017[[deparse(as.name(i))]], "label") <- NULL
+cols <- colnames(NL_Regional_Statistics2017)
+for (c in cols) {
+  attr(NL_Regional_Statistics2017[[c]], "label") <- NULL
 }
 ```
 
@@ -889,12 +880,12 @@ Let's fix this issue with the function `trimws()` for the columns concerned:
 
 ```{r}
 cols <- c('Code', 'Region_code', 'Region_name', 'Province_code', 'Province_name')
-NL_Regional_Statistics2017[cols] <- sapply(NL_Regional_Statistics2017[cols], function(x){trimws(x) %>% as.factor()})
+NL_Regional_Statistics2017[cols] <- 
+  lapply(NL_Regional_Statistics2017[cols], function(x){as.factor(trimws(x))})
 ```
 
 ```{r}
 head(NL_Regional_Statistics2017)
-
 ```
 
 This looks much better!
@@ -921,12 +912,11 @@ Eurostat even created a nice video on the topic: \url{https://youtu.be/a4Y-hCQ-K
 
 ### Extracting NUTS 1 and NUTS 2 regions
 
-Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively. At NUTS 1 level the Neherlands is divided into 4 regions ('Landsdelen') and at NUTS 2 level into 12 provinces:
+Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively. At NUTS 1 level the Netherlands is divided into 4 regions ('Landsdelen') and at NUTS 2 level into 12 provinces:
 
 ```{r}
-
-NL_Regions2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "LD")
-NL_Provinces2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "PV")
+NL_Regions2017_data <- filter(NL_Regional_Statistics2017, Code %like% "LD")
+NL_Provinces2017_data <- filter(NL_Regional_Statistics2017, Code %like% "PV")
 ```
 
 Please note: these new data frames inherit factor levels from the original data frame from which they are created. Use the **RStudio Environment pane**, to confirm that - for example - the `Name` column of the `NL_Provinces2017_data` table is now a Factor with 770 levels, whereas there are only 12 provinces. So you have to drop unused levels before you can use the new subsets for further analysis:
@@ -940,20 +930,23 @@ NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
 \newpage
 
 ```{r}
-as.data.frame(NL_Provinces2017_data[,c(1,2,5,6,7)])
+NL_Provinces2017_data %>% 
+  select(Code, Name, Total_population, Region_code, Region_name) %>% as.data.frame()
 ```
 
 We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of this suffix, while making sure that the column remains a factor:
 
 ```{r}
-NL_Provinces2017_data$Name <- as.factor(str_replace(NL_Provinces2017_data$Name," \\(PV\\)", ""))
+NL_Provinces2017_data$Name <- 
+  as.factor(str_replace(NL_Provinces2017_data$Name," \\(PV\\)", ""))
 ```
 
 Likewise, the region names in the column `Name` all have the suffix *(LD)*. We will also remove that:
 
 ````{r}
-as.data.frame(NL_Regions2017_data[,c(1,2,5)])
-NL_Regions2017_data$Name <- as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
+NL_Regions2017_data %>% select(Code, Name, Total_population) %>% as.data.frame()
+NL_Regions2017_data$Name <- 
+  as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
 ```
 
 \newpage
@@ -964,8 +957,9 @@ Let's investigate the spread of the Dutch population over the different regions 
 
 The most basic call to the `barplot()` function, is just to provide a column from a dataset and leave all the defaults:
 
-```{r exbplot1, eval=FALSE}
-barplot(NL_Provinces2017_data$Total_population) # Try this yourself - result not printed in this manual
+```{r exbplot1, eval= FALSE}
+barplot(NL_Provinces2017_data$Total_population) 
+# Try this yourself - result not printed in this manual
 ```
 
 This returns a very basic plot, with no labels and no title, so not very useful.
@@ -973,7 +967,13 @@ This returns a very basic plot, with no labels and no title, so not very useful.
 Use `?barplot()` to see what arguments we can use. After some trial and error we might come to a statement like this:
 
 ```{r exbplot2}
-barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Name, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants (* 1.000.000)", cex.lab = .8, space = 0, col = "lightblue", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8)
+barplot(NL_Provinces2017_data$Total_population / 1000000, 
+        names = NL_Provinces2017_data$Name, 
+        las = 2, cex.axis = .6, cex.names = .6, 
+        cex.main = .8, cex.lab = .8, space = 0, 
+        col = "lightblue", 
+        ylab = "Inhabitants (* 1.000.000)", 
+        main = "Number of Inhabitants by Province - The Netherlands - 2017")
 ```
 
 Not bad at all, for a first attempt. Please note: the provinces are not presented in alphabetical order, but in their  *natural* order, from Groningen (PV20) in the North to Limburg (PV31) in the South.
@@ -985,15 +985,24 @@ So, In the next plot we will color the bars by region - North, East, West, South
 We will need 4 different colors for this plot. In the statement below we use the `palette()` function to manipulate the color palette which is used when a `col=` has a numeric index. Using the `c()` function you create a vector with 4 distinct colors, which is passed as an argument into `palette()`:
 
 ```{r}
-palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
-
+palette(c("royalblue3", "firebrick3", "darkolivegreen4", "goldenrod1"))
 ```
 
-
-And now we can create te barplot like this - with the arguments for the legend provided as a `list`:
+And now we can create the barplot like this - with the arguments for the legend provided as a `list`:
 
 ```{r}
-barplot(NL_Provinces2017_data$Total_population/1000000, names = NL_Provinces2017_data$Name, las = 2, cex.axis = .6, cex.names = .6, ylab = "Inhabitants ( * 1,000,000)", col = NL_Provinces2017_data$Region_code, border = "grey", main = "Number of Inhabitants by Province - The Netherlands - 2017", cex.main = .8, legend.text = unique(NL_Provinces2017_data$Region_name), args.legend = list(x = 'topleft', bty = 'n', fill = unique(NL_Provinces2017_data$Region_name), border = 'grey'))
+barplot(NL_Provinces2017_data$Total_population / 1000000, 
+        names = NL_Provinces2017_data$Name, 
+        las = 2, cex.axis = .6, cex.names = .6, 
+        cex.main = .8, border = "grey", 
+        col = NL_Provinces2017_data$Region_code, 
+        ylab = "Inhabitants ( * 1,000,000)", 
+        main = "Number of Inhabitants by Province - The Netherlands - 2017", 
+        legend.text = unique(NL_Provinces2017_data$Region_name), 
+        args.legend = list(x = 'topleft', 
+                           bty = 'n', 
+                           fill = unique(NL_Provinces2017_data$Region_name), 
+                           border = 'grey'))
 ```
 
 
@@ -1016,13 +1025,13 @@ And yes, almost half of the Dutch population lives in West-Nederland.
 The pie chart on the previous page already confirmed what we wanted to know. But of course - with a little extra effort - we can improve the quality of the graph by adding a title, calculating the actual percentages and using the same colors for the regions as we did in the barplot:
 
 ```{r}
-pct <- round(NL_Regions2017_data$Total_population/sum(NL_Regions2017_data$Total_population)*100, 1)
-pct <- paste0(pct, "%")
+pct <- paste0(round(NL_Regions2017_data$Total_population / 
+                      sum(NL_Regions2017_data$Total_population) * 100, 1), "%")
 lbls <- paste(NL_Regions2017_data$Name, "\n", pct)
-palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
+palette(c("royalblue3", "firebrick3", "darkolivegreen4", "goldenrod1"))
 pie(NL_Regions2017_data$Total_population, labels = lbls, clockwise = TRUE,
-cex = .8, col = NL_Regions2017_data$Name, border = "grey",
-main = "Percentage of Inhabitants by Region - The Netherlands - 2017")
+    cex = .8, col = NL_Regions2017_data$Name, border = "grey",
+    main = "Percentage of Inhabitants by Region - The Netherlands - 2017")
 ```
 
 ```{r echo = FALSE, results = 'hide', message = FALSE}
@@ -1034,13 +1043,13 @@ palette("default")
 ### Extracting municipal data
 
 
-Now we will extract the municipalities from `NL_Regional_Statistics2017`
+Now we will extract the municipalities from `NL_Regional_Statistics2017`.
 
 ```{r}
-NL_Municipalities2017_data <- NL_Regional_Statistics2017 %>% filter(Code %like% "GM")
+NL_Municipalities2017_data <- filter(NL_Regional_Statistics2017, Code %like% "GM")
 nrow(NL_Municipalities2017_data)
 ```
-Are there 713 municipalities in the Netherlands? No, not anymore!
+Are there `r nrow(NL_Municipalities2017_data)` municipalities in the Netherlands? No, not anymore!
 There used to be much more: in 1850 there were more or less 1200 municipalities. But today there are much less: the current (2018) amount is 380. The Netherlands has a long standing tradition of grouping smaller municipalities into larger ones. This is a slow process, but each year on the 1^st of January the number of municipalities diminishes again.
 
 We are looking at 2017, and in that year there were still 388 municipalities.
@@ -1050,7 +1059,7 @@ The table we have accessed contains data from 1995 up to today. And apparently i
 We can filter out the municipalities that do no longer exist by removing the ones without data. Here we use the column `Total_population` to check for that:
 
 ```{r}
-NL_Municipalities2017_data <- NL_Municipalities2017_data %>% filter(Total_population != "")
+NL_Municipalities2017_data <- filter(NL_Municipalities2017_data, Total_population != "")
 nrow(NL_Municipalities2017_data)
 ```
 
@@ -1063,7 +1072,7 @@ NL_Municipalities2017_data <- droplevels(NL_Municipalities2017_data)
 
 ### Merging sf and data.frame objects
 
-Now we want to plot a map with the regional subdivision. To be abel to do so we have to merge our data frame with a dataset containing geometry.
+Now we want to plot a map with the regional subdivision. To be able to do so we have to merge our data frame with a dataset containing geometry.
 
 We will access a WFS server to download the municipal geometry - for the year 2017! - as we have done in paragraph \ref{GFnl}:
 
@@ -1073,13 +1082,15 @@ library(sf)
 library(tmap)
 library(httr)
 library(data.table)
+library(dplyr)
 
 url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
             scheme = "https",
             query = list(service = "WFS",
                          version = "2.0.0",
                          request = "GetFeature",
-                         typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                         typename = 
+                           "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
                          outputFormat = "application/json")) %>% 
        setattr("class","url")
 request <- build_url(url)
@@ -1087,27 +1098,25 @@ request <- build_url(url)
 NL_Municipalities2017 <- st_read(request)
 ```
 
-
 As we do not need all attribute columns, we will select only the relevant ones:
 
 ```{r}
-NL_Municipalities2017 <- NL_Municipalities2017 %>% select(statcode,statnaam)
+NL_Municipalities2017 <- select(NL_Municipalities2017, statcode, statnaam)
 ```
 
-Please note: in the statement above we only select 2 columns, but the reulting object does also contain the `geometry`column. This is due to the *sticky* character of this `geometry` column. When you select a subset of columns, the geometry will always be included, unless you explicitly drop it. In other words: a subset of an `sf` object will in itself also be an `sf` object.
-
+Please note: in the statement above we only select 2 columns, but the resulting object does also contain the `geometry`column. This is due to the *sticky* character of this `geometry` column. When you select a subset of columns, the geometry will always be included, unless you explicitly drop it. In other words: a subset of an `sf` object will in itself also be an `sf` object.
 
 Now we will rename the columns:
 
 ```{r}
-names(NL_Municipalities2017)[1:2] <- c("Code","Name")
-
+NL_Municipalities2017 <- rename(NL_Municipalities2017, Code = statcode, Name = statnaam)
 ```
 
 Both datasets do contain a column with municipal codes, so now you can merge them, like you would do with any two data frames:
 
 ```{r}
-NL_Municipalities2017 <- merge(NL_Municipalities2017,NL_Municipalities2017_data, by = "Code")
+NL_Municipalities2017 <- 
+  merge(NL_Municipalities2017, NL_Municipalities2017_data, by = "Code")
 
 class(NL_Municipalities2017)
 ```
@@ -1118,15 +1127,14 @@ class(NL_Municipalities2017)
 And now we can plot our map with NUTS 1 regions, again using the same colors as before:
 
 ```{r}
-palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1"))
 qtm(shp = NL_Municipalities2017,
-    title= "Regional subdivison",
+    title = "Regional subdivison",
     fill = "Region_name",
     fill.title = "The Netherlands - 2017\nRegion",
-    fill.palette = palette(c("royalblue3","firebrick3","darkolivegreen4","goldenrod1")),
+    fill.palette = 
+      palette(c("royalblue3", "firebrick3", "darkolivegreen4", "goldenrod1")),
     borders = "grey",
     format = "NLD_wide")
-
 ```
 
 \newpage
@@ -1144,15 +1152,17 @@ When data are being loaded into R, for example with the function \textbf{read.cs
 
 In a previous exercise we have learned that there is an ongoing process of municipal regrouping in the Netherlands. Let's investigate opportunities for future regroupings by maping municipalities by size.
 
-We will start this exercise by dividin our municipalities in 3 groups: small, medium and large.
+We will start this exercise by dividing our municipalities in 3 groups: small, medium and large.
 
 A small municipality has less than 50,000 inhabitants, a medium sized one has between 50,000 and 200,000, whereas a municipality with more than 200,000 inhabitants is considered to be large.
 
 
 ```{r ordered_factor}
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 50000] <- "Small population"
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 50000 & NL_Municipalities2017$Total_population < 200000] <- "Medium population"
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population >= 200000] <- "Large population"
+NL_Municipalities2017 <- mutate(NL_Municipalities2017,
+  Category = case_when(Total_population < 50000 ~ "Small population",
+                       Total_population >= 50000 & 
+                       Total_population < 200000 ~ "Medium population",
+                       Total_population >= 200000 ~ "Large population"))
 ```
 
 ```{r ordered_factor2}
@@ -1162,14 +1172,17 @@ class(NL_Municipalities2017$Category)
 Now we will create an ordered factor with 3 levels:
 
 ```{r}
-NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Small population","Medium population","Large population"), ordered = TRUE)
+population_levels <- c("Small population", "Medium population", "Large population")
+NL_Municipalities2017 <- mutate(NL_Municipalities2017, 
+  Category = factor(Category, levels = population_levels, ordered = TRUE))
 
 class(NL_Municipalities2017$Category)
 ```
 ```{r change_categories, echo = FALSE, results = 'hide', message = FALSE}
-NL_Municipalities2017$Category <- as.character(NL_Municipalities2017$Category)
-NL_Municipalities2017$Category[NL_Municipalities2017$Total_population < 20000] <- "Very small population"
-NL_Municipalities2017$Category <- factor(NL_Municipalities2017$Category, levels = c("Very small population","Small population","Medium population","Large population"), ordered = TRUE)
+population_levels <- c("Very small population", "Small population", "Medium population", "Large population")
+NL_Municipalities2017 <- mutate(NL_Municipalities2017, 
+  Category = case_when(Total_population < 20000 ~ "Very small population", TRUE ~ as.character(Category)) %>% 
+    factor(levels = population_levels, ordered = TRUE))
 ```
 
 \newpage
@@ -1186,19 +1199,18 @@ As you can see there is still some potential to cluster very small municipalitie
 
 
 ```{r tmapcategories}
-qtm(shp = NL_Municipalities2017, title= "Municipalities by Population Size",
-    fill = "Category", fill.title = "The Netherlands - 2017\nCategory", borders = "grey", format = "NLD_wide")
+qtm(shp = NL_Municipalities2017, title = "Municipalities by Population Size",
+    fill = "Category", fill.title = "The Netherlands - 2017\nCategory", 
+    borders = "grey", format = "NLD_wide")
 ```
-
-
 
 \newpage
 
-# Spatial Refernce Systems \label{ChapCRS}
+# Spatial Reference Systems \label{ChapCRS}
 
 \begin{multicols}{2}
 
-In this chapter we will have a quick look at an important topic when handling geospatial data, i.e the Coordinate Reference System (or Spatial Refernce System) , which defines how spatial elements relate to the surface of the Earth and which is  used to project our geodata on a flat screen. We have ignored this subject more or less in the previous exercises, mainly because of the fact that the whole matter of projecting the data is handled very well in the `sf` package, or rather the `proj.4` software behind it. We just didn't have to think about it. Or wait, we did set a `crs` explicitly - using an `epsg` code - in the very first exercise this morning. Remember?
+In this chapter we will have a quick look at an important topic when handling geospatial data, i.e the Coordinate Reference System (or Spatial Reference System), which defines how spatial elements relate to the surface of the Earth and which is used to project our geodata on a flat screen. We have ignored this subject more or less in the previous exercises, mainly because of the fact that the whole matter of projecting the data is handled very well in the `sf` package, or rather the `proj.4` software behind it. We just didn't have to think about it. Or wait, we did set a `crs` explicitly - using an `epsg` code - in the very first exercise this morning. Remember?
 
 In general when you read in spatial data it comes with a proper CRS and if all your data is in this same projection, you really don't have to worry about all the geodesy behind it. But what if you want to combine data from different sources which appear to have different spatial reference systems?
 
@@ -1214,9 +1226,9 @@ Therefor we will shortly touch upon:
 
 ## Coordinate systems: Geographic vs. Projected
 
-Geographic coordinate systems identify locations on the Earth's surface using longitude and latitude. Longitude is the distance East or West in angular distance, i.e. measured in degrees, from the Prime Meridian plane. Latitude is this distance North or South of the equatorial plane. And no, there is not just one 'Lat\\Lon coordinate system'. All geographic systems have the use the same reference, i.e. the Prime Meridian and the Equator, but the exact location on the Earth depends on several parameters like the ellipsoid and the datum used. So even if someone gives you data 'in degrees' you still have to find out which CRS to use. With a wrong CRS your data might end up centimeters or even several meters from the correct location. An important advantage of these geographic systems is their global reach - they can be used everywhere and are useful when dealing with international datasets. An important disadvantge is: distances cannot be easily measured in for example meters or kilomters in geographic CRSs.
+Geographic coordinate systems identify locations on the Earth's surface using longitude and latitude. Longitude is the distance East or West in angular distance, i.e. measured in degrees, from the Prime Meridian plane. Latitude is this distance North or South of the equatorial plane. And no, there is not just one 'Lat\\Lon coordinate system'. All geographic systems have to use the same reference, i.e. the Prime Meridian and the Equator, but the exact location on the Earth depends on several parameters like the ellipsoid and the datum used. So even if someone gives you data 'in degrees' you still have to find out which CRS to use. With a wrong CRS your data might end up centimeters or even several meters from the correct location. An important advantage of these geographic systems is their global reach - they can be used everywhere and are useful when dealing with international datasets. An important disadvantage is: distances cannot be easily measured in for example meters or kilometers in geographic CRSs.
 
-Projected coordinate system have a much smaller reach, as these are based on Cartesian coordinates on an implicitly flat surface. They are only valid for a specific area - a country or even just a part of a country - where they have an origin, x and y axes, and a linear unit of measurement such as meters. We have seen several examples of data in such local, projected systems, e.g. EPSG:31287 for Austria, EPSG:3067 for Finland and EPSG:28992 for the Netherlands (but only onshore). These systems are ideal for dealing with data at a nationnal or subnational level. In such a case you shuld really stick with the local CRS. 
+Projected coordinate system have a much smaller reach, as these are based on Cartesian coordinates on an implicitly flat surface. They are only valid for a specific area - a country or even just a part of a country - where they have an origin, x and y axes, and a linear unit of measurement such as meters. We have seen several examples of data in such local, projected systems, e.g. EPSG:31287 for Austria, EPSG:3067 for Finland and EPSG:28992 for the Netherlands (but only onshore). These systems are ideal for dealing with data at a national or subnational level. In such a case you shuld really stick with the local CRS. 
 
 ## `epsg` codes and. `proj4string` definitions
 
@@ -1299,11 +1311,6 @@ url <- list(hostname = "geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs
                          outputFormat = "application/json")) %>% 
        setattr("class","url")
 request <- build_url(url)
-
-print(request)
-
-
-
 ```
 The variable `request` will now contain this [link](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011%3Acbsbevolkingskernen2011&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
