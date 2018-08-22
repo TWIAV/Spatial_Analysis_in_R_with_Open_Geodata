@@ -1362,7 +1362,9 @@ class(NL_Municipalities2017)
 ### `qtm()`
 
 And now we can plot our map with NUTS 1 regions, again using the same colors as before:
-
+```{r echo=FALSE}
+palette(c("royalblue3", "firebrick3", "darkolivegreen4", "goldenrod1"))
+```
 ```{r}
 qtm(shp = NL_Municipalities2017,
     title = "Regional subdivison",
