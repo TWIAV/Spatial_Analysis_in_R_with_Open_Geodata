@@ -866,7 +866,7 @@ The response contains the layer information needed:
 response$layers %>% select(id, name)
 ```
 
-The USA Rail Road hosted feature service only has one layer with called *USA Railroads*. 
+The USA Rail Road hosted feature service only has one layer called *USA Railroads*. 
 
 ```{r}
 layer_id <- response$layers %>% filter(name == 'USA Railroads') %>% select(id) 
@@ -880,7 +880,7 @@ layer_path <- paste("USA_Railroads_1/FeatureServer", layer_id, sep = "/")
 layer_path
 ```
 
-The response also other valuable like the maximum number of records returned per request:
+The response also contains other valuable information like the maximum number of records returned per request:
 ```{r}
 response$maxRecordCount
 ```
@@ -888,6 +888,8 @@ response$maxRecordCount
 ```{r echo = FALSE, results = 'hide'}
 maxRecordCount <- response$maxRecordCount
 ```
+
+\newpage
 
 We can get even more information on the capabilities of the railroad layer:
 ```{r}
@@ -923,7 +925,10 @@ hits <- response$properties$count
 hits
 ```
 
-`r hits` is way more that the maximum record count per request of `r maxRecordCount`!    
+`r hits` is way more than the maximum record count per request of `r maxRecordCount`!    
+
+\newpage
+
 Let's do a request to fetch the records.
 
 ```{r}
@@ -940,7 +945,7 @@ request <- build_url(url)
 railroads <- st_read(request)
 ```
 
-What is the number of records in the railroads dataframe? One would expect, no more than 1,000.
+What is the number of records in the railroads dataframe? One would expect, not more than `r maxRecordCount`.
 
 ```{r}
 nrow(railroads)
@@ -949,7 +954,7 @@ nrow(railroads)
 Isn't that strange? The dataframe contains all `r hits` records. How is this possible?    
 Well the GDAL library makes it very easy for us. It detects that multiple requests are needed to fetch all the records and does this automagically for us. So no need to think of response paging, GDAL already has the solution for that!
 
-A lot of the railroads are labelled 'abandonned'. Of course you can do this *after* you fetched the records, but this isn't very efficient. Let's change the parameter value of `where` in our request, so only exploited rail roads are included in the response. 
+A lot of the railroads are labelled 'abandonned'. Of course we can limit the selection *after* we fetched the records, but this isn't very efficient. Let's change the parameter value of `where` in our request, so only railroads in use are included in the response. 
 
 ```{r}
 url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
@@ -961,7 +966,10 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
                          f = "geojson")) %>% 
        setattr("class","url")
 request <- build_url(url)
+```
+\newpage
 
+```{r}
 exploited_railroads <- st_read(request)
 nrow(exploited_railroads)
 ```
@@ -979,6 +987,10 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
 request <- build_url(url)
 USA_States_2017 <- st_read(request)
 ```
+
+\newpage
+
+When we plot the rail network we do see a clear concentration in the Eastern part of the continent:
 
 ```{r}
 library(tmap)
