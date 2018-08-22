@@ -60,6 +60,12 @@ Version 0.4.5 - August 20, 2018
 
 This is the manual for a tutorial session to be delivered on Wednesday 12 September 2018 at the 6\textsuperscript{th} International \href{https://www.aanmelder.nl/uros2018}{Conference on the Use of R in Official Statistics (uRos2018)} at the Dutch Office for National Statistics (\href{https://www.cbs.nl/en-gb}{CBS}) in the Hague.
 
+\begin{itemize}
+\item Date: \textbf{Wednesday, September 12, 2018}  
+\item Time: \textbf{9:00 - 12:30}
+\item Location: \textbf{Tinbergenzaal} (at CBS, Henri Faasdreef 312, 2492JP The Hague, The Netherlands)
+\end{itemize}
+
 \subsection{Prerequisites}
 
 \begin{itemize}
