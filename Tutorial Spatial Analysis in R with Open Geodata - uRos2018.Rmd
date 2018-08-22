@@ -60,6 +60,12 @@ Version 0.4.5 - August 20, 2018
 
 This is the manual for a tutorial session to be delivered on Wednesday 12 September 2018 at the 6\textsuperscript{th} International \href{https://www.aanmelder.nl/uros2018}{Conference on the Use of R in Official Statistics (uRos2018)} at the Dutch Office for National Statistics (\href{https://www.cbs.nl/en-gb}{CBS}) in the Hague.
 
+\begin{itemize}
+\item Date: \textbf{Wednesday, September 12, 2018}  
+\item Time: \textbf{9:00 - 12:30}
+\item Location: \textbf{Tinbergenzaal} (at CBS, Henri Faasdreef 312, 2492JP The Hague, The Netherlands)
+\end{itemize}
+
 \subsection{Prerequisites}
 
 \begin{itemize}
@@ -225,7 +231,7 @@ plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
 
 ## Interactive Viewing of Spatial Data in R
 
-Until now you have seen some static maps plotted on the **Plots** pane. But as a real Data Scientist you also want to be able to explore your data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
+In the previous paragraph we have seen a static map plotted on the **Plots** pane. But as a real Data Scientist we also want to be able to explore our data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
 
 In this paragraph we will look at two of these.
 
@@ -246,6 +252,22 @@ To be able to view your spatial data interactively you will first have to load t
 library(mapview)
 ```
 
+Now we can open up an interactive map using a the function `mapview()` (see Figure \ref{Interactive_mapping_mapview1}):
+
+```{r eval = FALSE}
+mapview(NL_Airports, color = "red", col.regions = "orange", alpha.regions = 1, label = NL_Airports$airport)
+```
+
+\begin{figure}[H]
+\centering
+\caption{An interactive map can be opened up using a simple mapview() statement}
+\vspace{5pt}
+\includegraphics{Images/Interactive_mapping_mapview.png}
+\label{Interactive_mapping_mapview1}
+\end{figure}
+
+
+\newpage
 
 ### The package `tmap`
 
@@ -264,11 +286,65 @@ To be able to view your spatial data interactively you will first have to load t
 library(tmap)
 ```
 
+\newpage
+
 ## `st_write()`
+
+To share the spatial data in a simple features object with non-R users we have to write it to a spatial database or file format with the function `st_write()`
+
+### Export data to an ESRI Shapefile \label{esrishape}
+
+A well-known format to write to is the ESRI Shapefile format (see Figure \ref{output_shapefile1}):
+
+```{r}
+st_write(NL_Airports, "NL_Airports.shp")
+```
+
+```{r echo = FALSE}
+# Delete the output files to keep the repository clean
+unlink("NL_Airports.*")
+```
+
+\begin{figure}[H]
+\centering
+\caption{The shapefile with the corresponding files are written to your Working Directory}
+\vspace{5pt}
+\includegraphics{Images/output_shapefile.png}
+\label{output_shapefile1}
+\end{figure}
+
+\tcbset{coltitle=black, colbacktitle=white, colframe=gray!75!black,colback=white,nobeforeafter}
+\begin{tcolorbox}[enlarge by=5mm, hyphenationfix, title=\Large{The ESRI Shapefile}]
+The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapefile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consists of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.\\
+\\
+The shapefile format has been developed by \href{https://www.esri.com/}{Esri} and over the years has become a \textit{de facto} standard for data interoperability among Esri and other GIS software products.
+\end{tcolorbox}
+
+\newpage  
+
+### Export data to a GeoJSON file 
+
+Another format we may use is GeoJSON (see Figure \ref{nl_airports_geojson_in_npp1}):
 
 ```{r}
 st_write(NL_Airports, "NL_Airports.geojson")
 ```
+
+```{r echo = FALSE}
+# Delete the output files to keep the repository clean
+unlink("NL_Airports.geojson")
+```
+
+\begin{figure}[H]
+\centering
+\caption{The GeoJSON file can be viewed in a text editor}
+\vspace{5pt}
+\includegraphics{Images/nl_airports_geojson_in_npp.png}
+\label{nl_airports_geojson_in_npp1}
+\end{figure}
+
+
+
 \newpage
 
 # Accessing Geospatial Vector Data over the Internet {-}
@@ -277,11 +353,7 @@ st_write(NL_Airports, "NL_Airports.geojson")
 
 \begin{multicols}{2}
 
-In this chapter we will learn how to download, to unzip and to load shapefiles \textbf{using R}. There will be no need to use your web browser, your file explorer or a zip utility - the whole process can be completed using just a few lines of R code.
-
-The shapefile format is a well-known and still rather popular geospatial vector data format for Geographic Information System (GIS) software. It spatially describes vector features - points, lines, and polygons - with attribute data attached. The shapefile is a 'classic' GIS file format in the sense that it stores geometry and attribute data in separate files (in this chapter we will discover that a single shapefile in reality consists of multiple files) as opposed to more modern spatial database or file formats, where geometry and attributes are stored together in a single table or file.
-
-The shapefile format has been developed by \href{https://www.esri.com/}{Esri} and over the years has become a \textit{de facto} standard for data interoperability among Esri and other GIS software products.
+In this chapter we will learn how to download, to unzip and to load shapefiles \textbf{using R}. We have seen the ESRI Shapefile before in paragraph \ref{esrishape}. There will be no need to use your web browser, your file explorer or a zip utility - the whole process can be completed using just a few lines of R code.
 
 It is not uncommon for public organizations - including national statistical institutes - to distribute geographic information in this shapefile format. So, you will find shapefiles on the \href{https://www.cbs.nl/nl-nl/dossier/nederland-regionaal/geografische-data}{page with geographic data of the Dutch Office for National Statistics (CBS)} and also on the \href{http://data.statistik.gv.at/web/catalog.jsp}{STATISTIK AUSTRIA open.data Portal}.
 
