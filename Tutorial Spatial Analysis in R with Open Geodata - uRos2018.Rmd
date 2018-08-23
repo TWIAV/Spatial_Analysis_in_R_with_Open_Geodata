@@ -48,17 +48,17 @@ knitr::opts_chunk$set(error = TRUE)
 
 \normalsize
 
-**Egge-Jan Pollé** - Tensing GIS Consultancy B.V.[^1]  
-**Willy Tadema** - Provincie Groningen[^2]
-
-Version 0.6.9 - August 22, 2018
-
 \begin{multicols}{2}
+
+\href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
+\href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
+
+Version 0.7.1 - August 23, 2018
 
 \subsection{Introduction}
 
 
-This is the manual for a tutorial session to be delivered on Wednesday 12 September 2018 at the 6\textsuperscript{th} International \href{https://www.aanmelder.nl/uros2018}{Conference on the Use of R in Official Statistics (uRos2018)} at the Dutch Office for National Statistics (\href{https://www.cbs.nl/en-gb}{CBS}) in the Hague.
+This is the manual for a tutorial session to be delivered at the 6\textsuperscript{th} International \href{https://www.aanmelder.nl/uros2018}{Conference on the Use of R in Official Statistics (uRos2018)} at the Dutch Office for National Statistics (\href{https://www.cbs.nl/en-gb}{CBS}) in the Hague.
 
 \begin{itemize}
 \item Date: \textbf{Wednesday, September 12, 2018}  
@@ -66,23 +66,43 @@ This is the manual for a tutorial session to be delivered on Wednesday 12 Septem
 \item Location: \textbf{Tinbergenzaal} (at CBS, Henri Faasdreef 312, 2492JP The Hague, The Netherlands)
 \end{itemize}
 
+\subsection{Traning data}
+
+All datasets used in this training manual do come from publicly accessible sources - so, are really \textit{Open Data}. Loading those data directly into R is part of the exercises. At the time of writing all links used in this book to access the data were valid.
+
+\subsection{Course material available on GitHub}
+
+This training manual is available on our \href{https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata}{GitHub repository} - both in \textbf{PDF} and in \textbf{Rmd} file format.  
+
+\includegraphics{Images/github.png}
+
+The whole project is a work in progress, so comments, suggestions, code samples and/or useful links are always welcome: just drop us a line or fork us on GitHub.
+
 \subsection{Prerequisites}
 
 \begin{itemize}
   \item Attendees should bring their own laptop with (64-bit) \href{https://www.r-project.org/}{R}, and preferably also \href{https://www.rstudio.com/}{RStudio}, installed.
-  \item Shortly before the training session we will publish a list of additional packages (e.g. \textbf{sf}, \textbf{mapview} and \textbf{tmap}) to be installed - please keep an eye on our \href{https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata}{GitHub repository}.
   \item No specific prior experience (with R) is required for this introductory session, though some basic experience in one or more of the following fields is certainly helpful: Data Science, Programming/Software Development and/or GIS.
 \end{itemize}
 
 \end{multicols}
 
+## Packages to install
 
-[^1]: https://www.linkedin.com/in/ejhpolle/
-[^2]: https://www.linkedin.com/in/willytadema/
+These are the packages you will at least need during the course:  
+`cbsodataR`, `data.table`, `dplyr`, `httr`, `knitr`, `jsonlite`, `mapview`, `sf`, `stringr` and `tmap`.
 
-##Course material available on GitHub
+**Pro tip**: use `purl` to extract all the R code from the manual
 
-The URL of this repository: [https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata](https://github.com/TWIAV/Spatial_Analysis_in_R_with_Open_Geodata)
+```{r eval = FALSE}
+library(knitr)
+purl("Tutorial Spatial Analysis in R with Open Geodata - uRos2018.Rmd")
+```
+This will definitely save you a lot of copying and pasting :-)
+
+
+
+
 
  \begin{figure}[b]
 \includegraphics{Images/Frontpage.png}
