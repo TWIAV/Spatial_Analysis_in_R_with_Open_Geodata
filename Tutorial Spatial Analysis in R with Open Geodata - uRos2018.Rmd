@@ -880,7 +880,8 @@ layer_path <- paste("USA_Railroads_1/FeatureServer", layer_id, sep = "/")
 layer_path
 ```
 
-The response contains also other valuable information like the maximum number of records returned per request:
+The response also contains other valuable information like the maximum number of records returned per request:
+
 ```{r}
 response$maxRecordCount
 ```
@@ -888,6 +889,8 @@ response$maxRecordCount
 ```{r echo = FALSE, results = 'hide'}
 maxRecordCount <- response$maxRecordCount
 ```
+
+\newpage
 
 We can get even more information on the capabilities of the railroad layer:
 ```{r}
@@ -939,7 +942,7 @@ request <- build_url(url)
 railroads <- st_read(request)
 ```
 
-What is the number of records in the railroads dataframe? One would expect, no more than `r format(maxRecordCount, big.mark = ",")`.
+What is the number of records in the railroads dataframe? One would expect, not more than `r format(maxRecordCount, big.mark = ",")`.
 
 ```{r}
 nrow(railroads)
@@ -948,7 +951,7 @@ nrow(railroads)
 Isn't that strange? The dataframe contains all `r format(hits, big.mark = ",")` records. How is this possible?    
 Well the GDAL library makes it very easy for us. It detects that multiple requests are needed to fetch all the records and does this automagically for us. So no need to think of response paging, GDAL already has the solution for that!
 
-A lot of the railroads are labelled 'abandonned'. They need to be filtered out. Of course you can do this *after* you fetched the records, but this isn't very efficient. Let's change the parameter value of `where` in our request, so only exploited rail roads are included in the response. 
+A lot of the railroads are labelled 'abandonned'. They need to be filtered out. Of course you can do this *after* you fetched the records, but this isn't very efficient. Let's change the parameter value of `where` in our request, so only railroads in use are included in the response. 
 
 ```{r}
 url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
@@ -960,11 +963,15 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
                          f = "geojson")) %>% 
        setattr("class","url")
 request <- build_url(url)
-exploited_railroads <- st_read(request)
-nrow(exploited_railroads)
+```
+\newpage
+
+```{r}
+railroads_in_use <- st_read(request)
+nrow(railroads_in_use)
 ```
 
-`r format(nrow(exploited_railroads), big.mark = ",")` is still a lot of records, but let's have a look at the result and add the railroads on top of a map of the USA:
+`r format(nrow(railroads_in_use), big.mark = ",")` is still a lot of records, but let's have a look at the result and add the railroads on top of a map of the USA:
 
 ```{r}
 url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
@@ -977,6 +984,10 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
 request <- build_url(url)
 USA_States_2017 <- st_read(request)
 ```
+
+\newpage
+
+When we plot the rail network we do see a clear concentration in the Eastern part of the continent:
 
 ```{r}
 library(tmap)
