@@ -92,7 +92,7 @@ The whole project is a work in progress, so comments, suggestions, code samples 
 These are the packages you will at least need during the course:  
 `cbsodataR`, `data.table`, `dplyr`, `httr`, `knitr`, `jsonlite`, `mapview`, `sf`, `stringr` and `tmap`.
 
-**Pro tip**: use `purl` to extract all the R code from the manual
+**Pro tip**: use the function `purl()` to extract all the R code from the manual:
 
 ```{r eval = FALSE}
 library(knitr)
