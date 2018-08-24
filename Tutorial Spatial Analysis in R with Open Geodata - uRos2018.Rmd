@@ -400,6 +400,10 @@ AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 qtm(AUSTRIA_GEM_20180101)
 ```
 
+```{r}
+# Delete the Data directory to keep the repo clean
+unlink("./Data", recursive = TRUE)
+```
 
 \newpage
 
@@ -909,8 +913,7 @@ response$fields %>% select(name, type)
 So now we know the query URL, the maximum number of records returned per request and the fieldnames in the dataset. 
 We are ready to request the records!     
 
-But wait, all the railroads in the United States of America, wouldn't that be *a lot* of records? Let's find out, before we fetch them all.    
-We can do this by specifying the query parameter `returnCountOnly = "true"`:    
+But wait, all the railroads in the United States of America, wouldn't that be *a lot* of records? Let's find out, before we fetch them all. We can do this by specifying the query parameter `returnCountOnly = "true"`:    
 
 ```{r}
 url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
@@ -964,12 +967,11 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
        setattr("class","url")
 request <- build_url(url)
 ```
-\newpage
-
 ```{r}
 railroads_in_use <- st_read(request)
 nrow(railroads_in_use)
 ```
+\newpage
 
 `r format(nrow(railroads_in_use), big.mark = ",")` is still a lot of records, but let's have a look at the result and add the railroads on top of a map of the USA:
 
@@ -985,23 +987,19 @@ request <- build_url(url)
 USA_States_2017 <- st_read(request)
 ```
 
-\newpage
-
 When we plot the rail network we do see a clear concentration in the Eastern part of the continent:
 
-```{r}
+```{r railroads_map, results = 'hide'}
 library(tmap)
 
 tmap_mode("plot")
 
 tm_shape(USA_States_2017) +
   tm_borders("black") +
-tm_shape(exploited_railroads) +
+tm_shape(railroads_in_use) +
   tm_symbols(col = "red", scale = 0.1, border.lwd = NA) +
 tm_legend(show = FALSE) 
 ```
-
-\newpage
 
 # Statistics Netherlands (CBS) StatLine databank as open data
 
@@ -1177,8 +1175,10 @@ NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
 
 ```{r}
 NL_Provinces2017_data %>% 
-  select(Code, Name, Total_population, Region_code, Region_name) %>% as.data.frame()
+  select(Code, Name, Total_population, Region_code, Region_name) %>% st_set_geometry(NULL)
 ```
+
+The `st_set_geometry(NULL)` removes the geometry in order to get some clean output.
 
 We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of this suffix, while making sure that the column remains a factor:
 
@@ -1190,7 +1190,7 @@ NL_Provinces2017_data$Name <-
 Likewise, the region names in the column `Name` all have the suffix *(LD)*. We will also remove that:
 
 ````{r}
-NL_Regions2017_data %>% select(Code, Name, Total_population) %>% as.data.frame()
+NL_Regions2017_data %>% select(Code, Name, Total_population) %>% st_set_geometry(NULL)
 NL_Regions2017_data$Name <- 
   as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
 ```
@@ -1501,6 +1501,101 @@ A `proj4string` definition contains different parameters such as the projection 
 
 
 \newpage
+
+# Analysing spatial datasets {chapAnalysis}
+
+The municipality of The Hague publishes some nice datasets on http://denhaag.dataplatform.nl. We'll use some of them to learn more about spatial en geometric operations:
+
+* Districts (polygons)
+* Trees (points)
+* Bat flight paths (lines)
+
+```{r result = 'hide'}
+library(sf)
+library(dplyr)
+
+
+# Districts in The Hague
+url <- "https://ckan.dataplatform.nl/dataset/c1059cef-be66-4a7a-9657-2f38f55794ed/resource/a175afe5-67e2-4e45-8b71-62f30377bf7d/download/wijken.json"
+districts <- st_read(url) %>% select(code = WIJKCODE, name = WIJKNAAM)
+
+# Trees in The Hague
+url <- "https://ckan.dataplatform.nl/dataset/dd3873f6-b2d0-42e8-94c7-f7b47dcb71f0/resource/7ac8ba4a-586e-43f2-b12e-014079c83f00/download/bomen-csv.zip"
+zip_file <- tempfile(fileext = ".zip")
+download.file(url, destfile = zip_file, mode = "wb")
+dir.create("./Data", showWarnings = FALSE)
+unzip(zip_file, exdir = "./Data")
+unlink(zip_file)
+rm(url, zip_file)
+trees <- read.csv("./Data/bomen.csv", quote = "", sep = ";") %>%
+         st_as_sf(coords = c("LONG","LAT"), crs = 4326) %>%
+         select(id = ID, species = BOOMSOORT_WETENSCHAPPELIJ, age = LEEFTIJD)
+
+# Bat flight routes in The Hague
+url <- "https://ckan.dataplatform.nl/dataset/c7e9cb41-3b2d-47a4-9f1e-60ee7708f561/resource/ed7d5778-c890-4f4e-bfc3-048923761ace/download/vleermuisroutes.json"
+bat_flight_paths <- st_read(url) %>% select(FUNCTION = FUNCTIE)
+levels_dutch <- c("Migratieroute water- en meervleermu", 
+                  "Vliegroute gewone dwergvleermuis", 
+                  "Vliegroute laatvlieger", 
+                  "Vliegroute rosse vleermuis", 
+                  "Vliegroute watervleermuis")
+levels_eng <- c("Migration route Myotis daubentonii and Myotis dasycneme", 
+                "Flight path Pipistrelllus pipistrellus", 
+                "Flight path Eptesicus serotinus", 
+                "Flight path Nyctalus noctula", 
+                "Flight path Myotis daubentoni")
+bat_flight_paths$FUNCTION <- plyr::mapvalues(bat_flight_paths$FUNCTION, from = levels_dutch, to = levels_eng)
+``` 
+
+## Length, area and distance
+Lets begin with a simple question: What is the largest district in The Hague?
+
+```{r}
+districts$area <- st_area(districts)
+districts %>% filter(area == max(area)) %>% select(name, area) %>% st_set_geometry(NULL)
+```
+
+We don't want the area in square meters, but in square kilometers. That should be easy:
+
+```{r}
+districts %>% filter(area == max(area)) %>% select(name, area) %>% mutate(area = area / 10000) %>% st_set_geometry(NULL)
+```
+
+This isn't right. The units are still square meters!     
+The units are set according to the CRS. This is a good thing, because different CRSs use different units. Some of them use meters, others use feet.    
+However, in this case you need to change the units (and no need to subdivide by 10,000):
+
+```{r}
+districts %>% filter(area == max(area)) %>% select(name, area) %>% mutate(area = units::set_units(area, ha)) %>% st_set_geometry(NULL)
+```
+That's better!
+
+Next question: What are the lengths in kilometers - with two numbers after the decimal point - of the bat flight routes? 
+
+```{r}
+bat_flight_paths$length <- st_length(bat_flight_paths)
+bat_flight_paths %>% mutate(length = round(units::set_units(length, km), 2)) %>% st_set_geometry(NULL)
+```
+
+How many meters are the trees with id 112964 and 3114766 apart from each other?
+```{r}
+tree_1351893 <- filter(trees, id == 1351893)
+tree_1398051 <- filter(trees, id == 1398051)
+
+st_distance(tree_1351893, tree_1398051) %>% round()
+
+```
+
+How far is the nearest bat flight path from tree 1351893?
+
+```{r}
+st_distance(tree_1351893, bat_flight_paths) %>% min() %>% round()
+```
+
+```{r echo = FALSE}
+# Delete the Data directory to keep the repository clean
+unlink("./Data")
+```
 
 # Appendix A: List of abbreviations used {-}
 
