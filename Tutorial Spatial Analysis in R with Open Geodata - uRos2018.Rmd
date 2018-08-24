@@ -53,7 +53,7 @@ knitr::opts_chunk$set(error = TRUE)
 \href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
 \href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
 
-Version 0.7.1 - August 23, 2018
+Version 0.7.2 - August 24, 2018
 
 \subsection{Introduction}
 
@@ -869,6 +869,7 @@ library(httr)
 library(data.table)
 library(dplyr)
 library(jsonlite)
+library(sf)
 ```
 ```{r}
 
@@ -1514,17 +1515,9 @@ A `proj4string` definition contains different parameters such as the projection 
 
 \newpage
 
-# References {-}
+# Manipulating Spatial Data \label{ChapMan}
 
-* **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
-* **Pebesma, Edzer** (January 3, 2017). *Simple Features Now on CRAN*. Blog. Retreived from: [https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran)
-
-
-\newpage
-
-# Analysing spatial datasets {chapAnalysis}
-
-The municipality of The Hague publishes some nice datasets on http://denhaag.dataplatform.nl. We'll use some of them to learn more about spatial en geometric operations:
+The municipality of The Hague publishes some nice datasets on http://denhaag.dataplatform.nl. We'll use some of them to learn more about manipulating spatial data:
 
 * Districts (polygons)
 * Trees (points)
@@ -1533,7 +1526,6 @@ The municipality of The Hague publishes some nice datasets on http://denhaag.dat
 ```{r result = 'hide'}
 library(sf)
 library(dplyr)
-
 
 # Districts in The Hague
 url <- "https://ckan.dataplatform.nl/dataset/c1059cef-be66-4a7a-9657-2f38f55794ed/resource/a175afe5-67e2-4e45-8b71-62f30377bf7d/download/wijken.json"
@@ -1583,21 +1575,25 @@ districts %>% filter(area == max(area)) %>% select(name, area) %>% mutate(area =
 
 This isn't right. The units are still square meters!     
 The units are set according to the CRS. This is a good thing, because different CRSs use different units. Some of them use meters, others use feet.    
-However, in this case you need to change the units (and no need to subdivide by 10,000):
+However, in this case you need to change the units (and no need to divide by 10,000):
 
 ```{r}
 districts %>% filter(area == max(area)) %>% select(name, area) %>% mutate(area = units::set_units(area, ha)) %>% st_set_geometry(NULL)
 ```
-That's better!
 
-Next question: What are the lengths in kilometers - with two numbers after the decimal point - of the bat flight routes? 
+That's better!    
+Next question: What are the five shortest bat flight routes? Print the lengths in kilometers - with two numbers after the decimal point. 
 
 ```{r}
 bat_flight_paths$length <- st_length(bat_flight_paths)
-bat_flight_paths %>% mutate(length = round(units::set_units(length, km), 2)) %>% st_set_geometry(NULL)
+bat_flight_paths %>% mutate(length = round(units::set_units(length, km), 2)) %>% 
+                     arrange(length) %>% 
+                     st_set_geometry(NULL) %>% 
+                     head(5)
 ```
 
 How many meters are the trees with id 112964 and 3114766 apart from each other?
+
 ```{r}
 tree_1351893 <- filter(trees, id == 1351893)
 tree_1398051 <- filter(trees, id == 1398051)
@@ -1612,10 +1608,32 @@ How far is the nearest bat flight path from tree 1351893?
 st_distance(tree_1351893, bat_flight_paths) %>% min() %>% round()
 ```
 
+## Aggregating spatial data
+
+One of the nice things of sf objects is that you can take advantage of the dplyr functions like `select()`, `filter()`, `mutate()`, `group_by()` and `summarize()`. We already saw some examples in earlier chapters.
+
+```
+
+How far is the nearest bat flight path from tree 1351893?
+
+```{r}
+st_distance(tree_1351893, bat_flight_paths) %>% min() %>% round()
+```
+
 ```{r echo = FALSE}
 # Delete the Data directory to keep the repository clean
 unlink("./Data")
 ```
+
+\newpage
+
+# References {-}
+
+* **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
+* **Pebesma, Edzer** (January 3, 2017). *Simple Features Now on CRAN*. Blog. Retreived from: [https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran)
+
+
+\newpage
 
 # Appendix A: List of abbreviations used {-}
 
