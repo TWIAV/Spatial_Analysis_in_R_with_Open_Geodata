@@ -53,7 +53,7 @@ knitr::opts_chunk$set(error = TRUE)
 \href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
 \href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
 
-Version 0.7.2 - August 24, 2018
+Version 0.7.3 - August 25, 2018
 
 \subsection{Introduction}
 
@@ -420,7 +420,7 @@ AUSTRIA_GEM_20180101 <- st_read("./Data/STATISTIK_AUSTRIA_GEM_20180101.shp")
 qtm(AUSTRIA_GEM_20180101)
 ```
 
-```{r}
+```{r echo = FALSE}
 # Delete the Data directory to keep the repo clean
 unlink("./Data", recursive = TRUE)
 ```
@@ -1013,13 +1013,11 @@ When we plot the rail network we do see a clear concentration in the Eastern par
 ```{r railroads_map, results = 'hide'}
 library(tmap)
 
-tmap_mode("plot")
-tm_shape(USA_States_2017) +
-  tm_borders("black") +
-tm_shape(railroads_in_use) +
-  tm_symbols(col = "red", scale = 0.1, border.lwd = NA) +
-tm_legend(show = FALSE) 
+tm_shape(USA_States_2017) + tm_borders("black") + tm_shape(railroads_in_use) +
+  tm_symbols(col = "red", scale = 0.1, border.lwd = NA) + tm_legend(show = FALSE) 
 ```
+
+\newpage
 
 # Statistics Netherlands (CBS) StatLine databank as open data
 
@@ -1119,6 +1117,7 @@ for (c in cols) {
   attr(NL_Regional_Statistics2017[[c]], "label") <- NULL
 }
 ```
+\newpage
 
 Let's have a first look at the table:
 
@@ -1195,10 +1194,8 @@ NL_Provinces2017_data <- droplevels(NL_Provinces2017_data)
 
 ```{r}
 NL_Provinces2017_data %>% 
-  select(Code, Name, Total_population, Region_code, Region_name) %>% st_set_geometry(NULL)
+  select(Code, Name, Total_population, Region_code, Region_name)
 ```
-
-The `st_set_geometry(NULL)` removes the geometry in order to get some clean output.
 
 We have noticed that the province names in the column `Name` all have the suffix *(PV)*. Let's get rid of this suffix, while making sure that the column remains a factor:
 
@@ -1210,7 +1207,7 @@ NL_Provinces2017_data$Name <-
 Likewise, the region names in the column `Name` all have the suffix *(LD)*. We will also remove that:
 
 ````{r}
-NL_Regions2017_data %>% select(Code, Name, Total_population) %>% st_set_geometry(NULL)
+NL_Regions2017_data %>% select(Code, Name, Total_population)
 NL_Regions2017_data$Name <- 
   as.factor(str_replace(NL_Regions2017_data$Name," \\(LD\\)", ""))
 ```
@@ -1782,7 +1779,7 @@ Again notice that this plot gives a distorted view of reality, because the datas
 
 ```{r echo = FALSE}
 # Delete the Data directory to keep the repository clean
-unlink("./Data")
+unlink("./Data", recursive = TRUE)
 ```
 
 \newpage
