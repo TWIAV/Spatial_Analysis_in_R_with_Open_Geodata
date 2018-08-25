@@ -1014,7 +1014,6 @@ When we plot the rail network we do see a clear concentration in the Eastern par
 library(tmap)
 
 tmap_mode("plot")
-
 tm_shape(USA_States_2017) +
   tm_borders("black") +
 tm_shape(railroads_in_use) +
@@ -1523,7 +1522,7 @@ The municipality of The Hague publishes some nice datasets on http://denhaag.dat
 * Trees (points)
 * Bat flight paths (lines)
 
-```{r result = 'hide'}
+```{r message = FALSE, warning = FALSE, results = 'hide'}
 library(sf)
 library(dplyr)
 
@@ -1545,7 +1544,7 @@ trees <- read.csv("./Data/bomen.csv", quote = "", sep = ";") %>%
 
 # Bat flight routes in The Hague
 url <- "https://ckan.dataplatform.nl/dataset/c7e9cb41-3b2d-47a4-9f1e-60ee7708f561/resource/ed7d5778-c890-4f4e-bfc3-048923761ace/download/vleermuisroutes.json"
-bat_flight_paths <- st_read(url) %>% select(FUNCTION = FUNCTIE)
+bat_flight_paths <- st_read(url) %>% select(func = FUNCTIE, id = COUNTER)
 levels_dutch <- c("Migratieroute water- en meervleermu", 
                   "Vliegroute gewone dwergvleermuis", 
                   "Vliegroute laatvlieger", 
@@ -1556,11 +1555,22 @@ levels_eng <- c("Migration route Myotis daubentonii and Myotis dasycneme",
                 "Flight path Eptesicus serotinus", 
                 "Flight path Nyctalus noctula", 
                 "Flight path Myotis daubentoni")
-bat_flight_paths$FUNCTION <- plyr::mapvalues(bat_flight_paths$FUNCTION, from = levels_dutch, to = levels_eng)
+bat_flight_paths$func <- 
+  plyr::mapvalues(bat_flight_paths$func, from = levels_dutch, to = levels_eng)
 ``` 
 
+You should always check whether all your datasets are in the same CRS:
+
+```{r}
+st_crs(districts)
+st_crs(trees)
+st_crs(bat_flight_paths)
+```
+
+The datasets are in the same CRS, and moreover it's a projected CRS, thus we can do our calculation in meters. We are ready to go!
+
 ## Length, area and distance
-Lets begin with a simple question: What is the largest district in The Hague?
+Let's begin with a simple question: What is the largest district in The Hague?
 
 ```{r}
 districts$area <- st_area(districts)
@@ -1570,15 +1580,21 @@ districts %>% filter(area == max(area)) %>% select(name, area) %>% st_set_geomet
 We don't want the area in square meters, but in square kilometers. That should be easy:
 
 ```{r}
-districts %>% filter(area == max(area)) %>% select(name, area) %>% mutate(area = area / 10000) %>% st_set_geometry(NULL)
+districts %>% filter(area == max(area)) %>% 
+              select(name, area) %>% 
+              mutate(area = area / 10000) %>% 
+              st_set_geometry(NULL)
 ```
 
 This isn't right. The units are still square meters!     
 The units are set according to the CRS. This is a good thing, because different CRSs use different units. Some of them use meters, others use feet.    
-However, in this case you need to change the units (and no need to divide by 10,000):
+However, in this case you need to change the units (and there is no need to divide by 10,000):
 
 ```{r}
-districts %>% filter(area == max(area)) %>% select(name, area) %>% mutate(area = units::set_units(area, ha)) %>% st_set_geometry(NULL)
+districts %>% filter(area == max(area)) %>% 
+              select(name, area) %>% 
+              mutate(area = units::set_units(area, ha)) %>% 
+              st_set_geometry(NULL)
 ```
 
 That's better!    
@@ -1589,10 +1605,10 @@ bat_flight_paths$length <- st_length(bat_flight_paths)
 bat_flight_paths %>% mutate(length = round(units::set_units(length, km), 2)) %>% 
                      arrange(length) %>% 
                      st_set_geometry(NULL) %>% 
-                     head(5)
+                     head(n = 5)
 ```
 
-How many meters are the trees with id 112964 and 3114766 apart from each other?
+How many meters are tree 1351893 and 1398051 apart from each other?
 
 ```{r}
 tree_1351893 <- filter(trees, id == 1351893)
@@ -1608,17 +1624,161 @@ How far is the nearest bat flight path from tree 1351893?
 st_distance(tree_1351893, bat_flight_paths) %>% min() %>% round()
 ```
 
-## Aggregating spatial data
-
-One of the nice things of sf objects is that you can take advantage of the dplyr functions like `select()`, `filter()`, `mutate()`, `group_by()` and `summarize()`. We already saw some examples in earlier chapters.
-
+And how many trees are there within 20 meters from the bat flight path 1509?
+  
+```{r}
+flight_path_1509 <- filter(bat_flight_paths, id == 1509)
+lengths(st_is_within_distance(flight_path_1509, trees, dist = 20))
 ```
 
-How far is the nearest bat flight path from tree 1351893?
+\newpage
+## Aggregating and filtering data
+
+One of the nice things of sf objects is that you can take advantage of the dplyr functions like `select()`, `filter()`, `mutate()`, `group_by()`, `summarize()` and `arrange()`. We already saw some examples in earlier chapters.    
+To illustrate the power of dplyr, let's calculate the count and mean age for each species in the trees dataset? List the species in alphabetical order. Only print the first 3 species.
 
 ```{r}
-st_distance(tree_1351893, bat_flight_paths) %>% min() %>% round()
+trees %>% select(species, age) %>% 
+          group_by(species) %>% 
+          summarize(mean_age = round(mean(age, na.rm =  TRUE), 2), count = n()) %>% 
+          arrange(species) %>%
+          st_set_geometry(NULL) %>% 
+          head(n = 3)
 ```
+
+But you can also aggregate spatial data, for instance calculate the city border using the districts dataset:
+
+```{r}
+the_hague <- st_union(districts)
+
+tmap_mode("plot")
+tm_shape(the_hague) +
+  tm_borders("red", lwd = 2, lty = "dashed") +
+tm_shape(districts) +
+  tm_borders(col = "grey", alpha = 0.5) +
+tm_layout(frame = FALSE) + 
+tm_legend(show = FALSE)
+```
+
+Or calculate the total number of trees for each district:
+
+```{r warning = FALSE}
+districts$total_trees <- lengths(st_covers(districts, trees))
+```
+
+It's always a good idea the verify your outcomes.
+
+```{r}
+nrow(trees)
+sum(districts$total_trees)
+```
+
+We're short `r nrow(trees) - sum(districts$total_trees)` trees in the district dataset! Where did those trees go?
+
+```{r message = FALSE}
+trees_not_in_district <- trees[the_hague, op = st_disjoint]
+nrow(trees_not_in_district)
+``` 
+
+`r nrow(trees_not_in_district)` trees are not in a district of The Hague. Let's make a plot:
+
+```{r message = FALSE}
+tmap_mode("plot")
+tm_shape(districts) +
+  tm_borders("black") +
+tm_shape(trees) +
+  tm_symbols(col = "darkgreen", scale = 0.05, border.lwd = NA) +
+tm_shape(trees_not_in_district) +
+  tm_symbols(col = "red", scale = 0.05, border.lwd = NA) +
+tm_layout(frame = FALSE) + 
+tm_legend(show = FALSE)
+```
+
+To be on the safe side, we'll remove all the trees from our dataset that are outside the districts. These are the red trees in the plot.
+
+```{r message = FALSE, warning = FALSE}
+trees <- trees[the_hague, op = st_intersects]
+nrow(trees)
+```
+
+\newpage
+
+Another example of applying a spatial filter: Where are the bat flight paths in the Zorgvliet district?
+
+```{r message = FALSE, warning = FALSE}
+zorgvliet <- filter(districts, name == "Zorgvliet")
+bat_flight_paths_zorgvliet <- bat_flight_paths[zorgvliet, op = st_intersects]
+
+tmap_mode("plot")
+tm_shape(zorgvliet) +
+  tm_borders("black") +
+tm_shape(bat_flight_paths_zorgvliet) +
+  tm_lines(col = "blue") +
+tm_layout(frame = FALSE) +  
+tm_legend(show = FALSE)
+```
+
+That's kind of ugly, those flight paths running outside the district. Let's cut them on the district border. Also add the trees to the plot.
+
+```{r message = FALSE, warning = FALSE}
+bat_flight_paths_zorgvliet <- st_intersection(bat_flight_paths, zorgvliet)
+trees_zorgvliet <- st_intersection(trees, zorgvliet)
+
+tmap_mode("plot")
+tm_shape(zorgvliet) +
+  tm_borders("black") +
+tm_shape(trees_zorgvliet) +
+  tm_symbols(col = "darkgreen", scale = 0.05, border.lwd = NA) +
+tm_shape(bat_flight_paths_zorgvliet) +
+  tm_lines(col = "blue") +
+tm_layout(frame = FALSE) +
+tm_legend(show = FALSE)
+```
+\newpage
+
+## Calculating and visualizing density 
+
+Note that the dataset only contains trees in public space. But still, the tree density may give us an idea of how 'green' a district is.   
+
+What are the districts with the least and the most trees?
+
+```{r}
+districts$name[which.min(districts$total_trees)] %>% as.character()
+districts$name[which.max(districts$total_trees)] %>% as.character()
+```
+
+`r districts$name[which.min(districts$total_trees)] %>% as.character()` is a district with no trees at all in public space. Let's find out where it is.
+
+```{r message = FALSE}
+no_trees <- filter(districts, total_trees == 0)
+
+tmap_mode("plot")
+tm_shape(districts) +
+  tm_borders("black") +
+tm_shape(no_trees) +
+  tm_fill("grey") +
+tm_shape(trees) +
+  tm_symbols(col = "darkgreen", scale = 0.05, border.lwd = NA) +
+tm_layout(frame = FALSE) + 
+tm_legend(show = FALSE)
+```
+
+Now visualize the tree density for each district in The Hague.
+
+```{r}
+districts$tree_density <- 
+  round(districts$total_trees / units::set_units(districts$area, km^2))
+qtm(shp = districts, fill = "tree_density", 
+fill.palette = "Greens",
+fill.style = "kmeans", title = "Tree density",
+fill.title = parse(text = "trees/km^2"))
+```
+
+Again notice that this plot gives a distorted view of reality, because the dataset only contains trees in public space.But as an example of the power of spatial data manipulation and visualisation, it suffices.
+
+\newpage
+
+## Spatial joins
 
 ```{r echo = FALSE}
 # Delete the Data directory to keep the repository clean
