@@ -53,7 +53,7 @@ knitr::opts_chunk$set(error = TRUE)
 \href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
 \href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
 
-Version 0.7.3 - August 25, 2018
+Version 0.7.6 - September 3, 2018
 
 \subsection{Introduction}
 
@@ -104,11 +104,10 @@ This will definitely save you a lot of copying and pasting :-)
 
 
 
- \begin{figure}[b]
+\begin{figure}[b]
 \includegraphics{Images/Frontpage.png}
 \end{figure}
 
-\newpage
 \newpage
 \pdfbookmark{\contentsname}{toc}
 \hypersetup{linkcolor=black}
@@ -245,67 +244,6 @@ And we can plot our airports like this:
 plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
 ```
 
-
-
-\newpage
-
-## Interactive Viewing of Spatial Data in R
-
-In the previous paragraph we have seen a static map plotted on the **Plots** pane. But as a real Data Scientist we also want to be able to explore our data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
-
-In this paragraph we will look at two of these.
-
-### The package `mapview`
-
-**The package `mapview` on CRAN:**  
-[https://cran.r-project.org/package=mapview](https://cran.r-project.org/package=mapview)
-
-If the package is not yet installed, you can install it with the following command:
-
-```{r, eval = FALSE}
-install.packages("mapview")
-```
-
-To be able to view your spatial data interactively you will first have to load the package `mapview`:
-
-```{r}
-library(mapview)
-```
-
-Now we can open up an interactive map using a the function `mapview()` (see Figure \ref{Interactive_mapping_mapview1}):
-
-```{r eval = FALSE}
-mapview(NL_Airports, color = "red", col.regions = "orange", alpha.regions = 1, label = NL_Airports$airport)
-```
-
-\begin{figure}[H]
-\centering
-\caption{An interactive map can be opened up using a simple mapview() statement}
-\vspace{5pt}
-\includegraphics{Images/Interactive_mapping_mapview.png}
-\label{Interactive_mapping_mapview1}
-\end{figure}
-
-
-\newpage
-
-### The package `tmap`
-
-**The package `tmap` on CRAN:**  
-[https://cran.r-project.org/package=tmap](https://cran.r-project.org/package=tmap)
-
-If the package is not yet installed, you can install it with the following command:
-
-```{r, eval = FALSE}
-install.packages("tmap")
-```
-
-To be able to view your spatial data interactively you will first have to load the package `tmap`:
-
-```{r}
-library(tmap)
-```
-
 \newpage
 
 ## `st_write()`
@@ -363,7 +301,122 @@ unlink("NL_Airports.geojson")
 \label{nl_airports_geojson_in_npp1}
 \end{figure}
 
+## Further reading
 
+The big announcement:
+
+* **Pebesma, Edzer** (January 3, 2017). *Simple Features Now on CRAN*. Blog. Retreived from: [https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran)
+
+The `sf` vignettes:
+
+* [Simple Features for R](https://cran.r-project.org/web/packages/sf/vignettes/sf1.html)
+* [Reading, Writing and Converting Simple Features](https://cran.r-project.org/web/packages/sf/vignettes/sf2.html)
+* [Manipulating Simple Feature Geometries](https://cran.r-project.org/web/packages/sf/vignettes/sf3.html)
+* [Manipulating Simple Features](https://cran.r-project.org/web/packages/sf/vignettes/sf4.html)
+* [Plotting Simple Features](https://cran.r-project.org/web/packages/sf/vignettes/sf5.html)
+* [Miscellaneous](https://cran.r-project.org/web/packages/sf/vignettes/sf6.html)
+
+\newpage
+
+# Interactive Viewing of Spatial Data in R
+
+In the previous paragraph we have seen a static map plotted on the **Plots** pane. But as a real Data Scientist we also want to be able to explore our data on an interactive map. Until a few years ago this would have meant switching back and forth between a desktop GIS and R. But in recent years some new packages have been developed to enable interactive map viewing in R.
+
+In this paragraph we will look at two of these.
+
+## The package `mapview`
+
+**The package `mapview` on CRAN:**  
+[https://cran.r-project.org/package=mapview](https://cran.r-project.org/package=mapview)
+
+If the package is not yet installed, you can install it with the following command:
+
+```{r, eval = FALSE}
+install.packages("mapview")
+```
+
+To be able to view your spatial data interactively you will first have to load the package `mapview`:
+
+```{r}
+library(mapview)
+```
+
+Now we can open up an interactive map using a the function `mapview()` (see Figure \ref{Interactive_mapping_mapview1}):
+
+```{r eval = FALSE}
+mapview(NL_Airports, color = "red", col.regions = "orange", alpha.regions = 1, label = NL_Airports$airport)
+```
+
+\begin{figure}[H]
+\centering
+\caption{An interactive map can be opened up using a simple mapview() statement}
+\vspace{5pt}
+\includegraphics{Images/Interactive_mapping_mapview.png}
+\label{Interactive_mapping_mapview1}
+\end{figure}
+
+
+\newpage
+
+## The package `tmap`
+
+**The package `tmap` on CRAN:**  
+[https://cran.r-project.org/package=tmap](https://cran.r-project.org/package=tmap)
+
+If the package is not yet installed, you can install it with the following command:
+
+```{r, eval = FALSE}
+install.packages("tmap")
+```
+
+To be able to view your spatial data interactively you will first have to load the package `tmap`:
+
+```{r}
+library(tmap)
+```
+
+### More on `tmap` I: Workshop Plotting spatial data in R
+
+This afternoon you will be able to see much more thematic mapping as Martijn Tennekes, the author of the `tmap` package, will deliver his workshop **Plotting spatial data in R**.
+
+* Date: Wednesday, September 12, 2018
+* Time: 13:30 - 17:00
+* Location: this very same Tinbergenzaal
+
+Workshop materials can be found here: [https://github.com/mtennekes/tmap-workshop](https://github.com/mtennekes/tmap-workshop)
+
+\newpage
+
+### More on `tmap` II: Visualizing population density in France (2016)
+
+The thematic map below (see Figure \ref{example_tmap}) shows the population density in France in 2016, with an additional inset for *Île-de-France*, the region around Paris, as almost 20 percent of the French population lives there.
+
+The code to recreate this map can be found in this blog: [`tmap`: quick and easy thematic mapping in R](http://twiav.nl/en/blog0002en.php)
+
+\begin{figure}[H]
+\caption{An example of a thematic map created with tmap}
+\vspace{5pt}
+\includegraphics{Images/tmap_pop_density_france2016.png}
+\label{example_tmap}
+\end{figure}
+
+\newpage
+
+## Further reading
+
+The `mapview` vignettes:
+
+* [1. mapview basics](https://r-spatial.github.io/mapview/articles/articles/mapview_01-basics.html)
+* [2. mapview advanced controls](https://r-spatial.github.io/mapview/articles/articles/mapview_02-advanced.html)
+* [3. mapview options](https://r-spatial.github.io/mapview/articles/articles/mapview_03-options.html)
+* [4. mapview popups](https://r-spatial.github.io/mapview/articles/articles/mapview_04-popups.html)
+* [5. extra functionality](https://r-spatial.github.io/mapview/articles/articles/mapview_05-extras.html)
+* [6. extra leaflet functionality](https://r-spatial.github.io/mapview/articles/articles/mapview_06-add.html)
+* [7. ceci constitue la fin du pipe](https://r-spatial.github.io/mapview/articles/articles/mapview_07-pipe.html)
+
+The `tmap` vingette:
+
+* [tmap: get started!](https://cran.r-project.org/web/packages/tmap/vignettes/tmap-getstarted.html)
 
 \newpage
 
@@ -1509,15 +1562,31 @@ A `proj4string` definition contains different parameters such as the projection 
 
 ## Reprojecting data
 
+## Further reading
+
+A good introduction into Spatial Refernce Systems in R (and many other topics R spatial):
+
+* **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
+
+
+
 \newpage
 
 # Manipulating Spatial Data \label{ChapMan}
 
-The municipality of The Hague publishes some nice datasets on http://denhaag.dataplatform.nl. We'll use some of them to learn more about manipulating spatial data:
+\begin{multicols}{2}
 
-* Districts (polygons)
-* Trees (points)
-* Bat flight paths (lines)
+The municipality of The Hague publishes some nice datasets on \url{http://denhaag.dataplatform.nl}. We'll use some of them to learn more about manipulating spatial data:
+
+\begin{itemize}
+\item{Districts (polygons)}
+\item{Trees (points)}
+\item{Bat flight paths (lines)}
+\end{itemize}
+
+\includegraphics[width=80mm]{Images/DH-NL-Rgb-CS6.png}
+
+\end{multicols}
 
 ```{r message = FALSE, warning = FALSE, results = 'hide'}
 library(sf)
@@ -1538,7 +1607,11 @@ rm(url, zip_file)
 trees <- read.csv("./Data/bomen.csv", quote = "", sep = ";") %>%
          st_as_sf(coords = c("LONG","LAT"), crs = 4326) %>%
          select(id = ID, species = BOOMSOORT_WETENSCHAPPELIJ, age = LEEFTIJD)
+```
 
+\newpage
+
+```{r message = FALSE, warning = FALSE, results = 'hide'}
 # Bat flight routes in The Hague
 url <- "https://ckan.dataplatform.nl/dataset/c7e9cb41-3b2d-47a4-9f1e-60ee7708f561/resource/ed7d5778-c890-4f4e-bfc3-048923761ace/download/vleermuisroutes.json"
 bat_flight_paths <- st_read(url) %>% select(func = FUNCTIE, id = COUNTER)
@@ -1565,6 +1638,8 @@ st_crs(bat_flight_paths)
 ```
 
 The datasets are in the same CRS, and moreover it's a projected CRS, thus we can do our calculation in meters. We are ready to go!
+
+\newpage
 
 ## Length, area and distance
 Let's begin with a simple question: What is the largest district in The Hague?
@@ -1781,14 +1856,6 @@ Again notice that this plot gives a distorted view of reality, because the datas
 # Delete the Data directory to keep the repository clean
 unlink("./Data", recursive = TRUE)
 ```
-
-\newpage
-
-# References {-}
-
-* **Lovelace, Robin, Jakub Nowosad & Jannes Muenchow** (Forthcoming). *Geocomputation with R*. CRC Press. Online version: [https://geocompr.robinlovelace.net/](https://geocompr.robinlovelace.net/)
-* **Pebesma, Edzer** (January 3, 2017). *Simple Features Now on CRAN*. Blog. Retreived from: [https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran](https://www.r-consortium.org/blog/2017/01/03/simple-features-now-on-cran)
-
 
 \newpage
 
