@@ -722,6 +722,148 @@ request <- build_url(url)
 ```
 The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
+## Advanced topics
+
+Not every WFS service supports GeoJSON as an output format. So how can we retrieve the output formats that are available? To answer this question we take a closer look at the capabilities document.
+
+```{r message = FALSE}
+library(magrittr)
+library(httr)
+library(data.table)
+library(xml2)
+
+url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetCapabilities")) %>% 
+       setattr("class","url")
+request <- build_url(url)
+doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml() 
+xpath <- paste0("//ows:Operation[@name='GetFeature']",
+                "/ows:Parameter[@name='outputFormat']",
+                "/ows:AllowedValues/ows:Value")
+output_formats <- doc %>% xml_find_all(xpath) %>% xml_text()
+output_formats
+```
+
+As we can see, GML and GeoJSON are not the only supported formats for this specific WFS. The service can also return the query result in a CSV or KML file.
+
+To get a list of all available feature types in a service, we can also inspect the capabilities document. Think of a feature type as a layer or dataset.
+
+```{r}
+xpath  <- "//wfs:FeatureType/wfs:Name"
+feature_types  <- doc %>% xml_find_all(xpath) %>% xml_text()
+head(feature_types) 
+```
+
+Often the number of records returned by a service per request is limited to prevent performance issues caused by heavy requests. Therefore we should always check the maximum record count per request.
+
+```{r}
+xpath <- "//ows:Constraint[@name='CountDefault']/ows:DefaultValue"
+maxRecordCount <- doc %>% xml_find_first(xpath) %>% xml_integer()
+maxRecordCount
+```
+
+So a request to the cbsgebiedsindelingen WFS will never return more than `r format(maxRecordCount, big.mark = ",")` records.
+
+To determine the number of hits before we actually fetch the query result, we can add `resultType=hits` to our `GetFeature` request: 
+
+```{r}
+url$query = list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "cbsgebiedsindelingen:cbs_arbeidsmarktregio_2014_gegeneraliseerd",
+                 resultType = "hits") %>% 
+            setattr("class","url")
+request <- build_url(url)
+doc <- doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml() 
+xpath <- "//wfs:FeatureCollection/@numberMatched"
+hits <- doc %>% xml_find_first(xpath) %>% xml_integer()
+hits
+```
+
+In this case the number of hits (`r format(hits, big.mark = ",")`) is smaller than the maximum record count per request (`r format(maxRecordCount, big.mark = ",")`). So we can fetch the entire dataset with one request.
+
+Let's put it all together in another example and query the Dutch Adresses en Buildings Register (Basisregistratie Adressen en Gebouwen) for the adresses in Hoek van Holland, a seaside town not far from The Hague.
+
+```{r}
+url <- list(hostname = "geodata.nationaalgeoregister.nl/bag/wfs",
+            scheme = "https",
+            query = list(service = "WFS",
+                         version = "2.0.0",
+                         request = "GetCapabilities")) %>% 
+            setattr("class","url")
+request <- build_url(url)
+doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml() 
+xpath <- "//wfs:FeatureType/wfs:Name"
+feature_types <- doc %>% xml_find_all(xpath) %>% xml_text()
+feature_types
+
+xpath <- "//ows:Constraint[@name='CountDefault']/ows:DefaultValue"
+maxRecordCount <- doc %>% xml_find_first(xpath) %>% xml_integer()
+maxRecordCount
+
+url$query = list(service = "WFS",
+                 version = "2.0.0",
+                 request = "GetFeature",
+                 typename = "bag:verblijfsobject",
+                 cql_filter = "bag:woonplaats='Hoek van Holland'",
+                 resultType = "hits") %>% 
+            setattr("class","url")
+request <- build_url(url)
+doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml()
+xpath <- "//wfs:FeatureCollection/@numberMatched"
+hits <- doc %>% xml_find_first(xpath) %>% xml_integer()
+hits
+```
+
+Notice that we added `cql_filter=bag:woonplaats='Hoek van Holland'` to the request to filter out only adresses in Hoek van Holland.
+
+Now the number of hits (`r format(hits, big.mark = ",")`) is greater than the maximum record count per request. We have hit the server limit. So how do we get all adresses if a request will not return more than `r format(maxRecordCount, big.mark = ",")`? The answer is simple: create more requests. This is called paging.
+
+For paging the parameters `sortBy`, `startIndex` and `count` come in handy. By adding `sortBy=bag:identificatie` to our request we ensure that the features returned, are sorted by their globally unique identifier. `startIndex` specifies the index of the first record. `count` is the number of records that the request should try to fetch. It is identical to the maximum record count.    
+
+Because we know the maximum record count and the number of hits, we can calculate the number of requests required to fetch all records in the query result. By increasing the `startIndex` for each subsequent request, we can eventually retrieve all adresses in Hoek van Holland.
+
+```{r, message = FALSE, warning = FALSE, results = 'hide'}
+library(sf)
+
+url$query <- list(service = "wfs", 
+                  version = "2.0.0", 
+                  request = "GetFeature",
+                  typename = "bag:verblijfsobject",
+                  cql_filter = "woonplaats='Hoek van Holland'",
+                  outputFormat = "application/json",
+                  resultType = "results",
+                  count = maxRecordCount,
+                  sortBy = "bag:identificatie")
+
+requestAdresses <- function(x) {
+  url$query$startIndex <- x
+  request <- build_url(url) 
+  st_read(request, stringsAsFactors = FALSE)
+}
+
+adresses <- lapply(seq(0, hits, maxRecordCount), requestAdresses) %>% do.call(rbind, .)
+```
+
+```{r}
+nrow(adresses)
+```
+
+All `r nrow(format(adresses, big.mark = ","))` adresses in Hoek van Holland are fetched! To wrap it up, let's visualize them in an interactive map.
+
+```{r eval = FALSE}
+library(tmap)
+
+tmap_mode('view')
+tm_shape(adresses) +  tm_dots(col = "black", scale = 0.1) + 
+  tm_legend(show = FALSE) + tm_view(basemaps = 'OpenStreetMap')
+```
+
+\includegraphics{Images/Hoek_van_Holland.png}
+
 ## Further reading
 
 The OGC offers an official tutorial module - [OGC E-learning](http://cite.opengeospatial.org/pub/cite/files/edu/index.html) - covering it's activities and the several standards it maintains. The [specific chapter on WFS](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html) can be found [here](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html).
@@ -1090,7 +1232,7 @@ In this chapter we will load Dutch statistical data directly into R, using the p
 
 The package `cbsodataR` can be found on CRAN: [https://cran.r-project.org/package=cbsodataR](https://cran.r-project.org/package=cbsodataR)
 
-```{r table_of_contents, echo = FALSE, results = 'hide'}
+```{r table_of_contents, echo=FALSE, results='hide'}
 library(cbsodataR)
 
 toc <- cbs_get_toc()
@@ -1637,7 +1779,13 @@ st_crs(trees)
 st_crs(bat_flight_paths)
 ```
 
-The datasets are in the same CRS, and moreover it's a projected CRS, thus we can do our calculation in meters. We are ready to go!
+The datasets are in the same CRS, namely WGS84 also known as EPSG:4326. Let's transform the data to RD_New to avoid warning messages in R later on in our analysis. RD_New or EPSG:28992 is the projected coordinate system for The Netherlands.    
+
+```{r}
+districts <- st_transform(districts, 28992)
+trees <- st_transform(trees, 28992)
+bat_flight_paths <- st_transform(bat_flight_paths, 28992)
+```
 
 \newpage
 
@@ -1929,3 +2077,6 @@ NL_Human_Settlements2011 <- st_read(request)
 plot(st_geometry(NL_Human_Settlements2011), col = "orange", border = "red")
 ```
 
+```{r echo = FALSE, results = 'hide'}
+unlink("./Data", recursive = TRUE)
+```
