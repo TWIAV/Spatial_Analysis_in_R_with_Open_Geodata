@@ -506,7 +506,7 @@ In general **GDAL**, the translator library behind the `sf` functions `st_read()
 
 So, in the exercises in this manual, when accessing a WFS service to retrieve data, we will always add the parameter `outputFormat=application/json`.
 
-## Access a WFS service: `request=GetCapabilities` \label{GCnl}
+## Access a WFS service: `request=GetCapabilities` \label{parGetCap_I}
 
 In general, organisations publishing data using WFS, will provide you with a URL to their WFS server which also contains a `GetCapabilities` request. Once you know the **capabilities** of the service (i.e. once you know what is on offer) you can start building your own request to the server.
 
@@ -520,6 +520,8 @@ The actual URL with the `GetCapabilities` reguest is:
 When you click this link the server response will be shown in your browser in XML format.
 
 We are not going to study this XML response line-by-line. Not now. But please leave the web page open in your browser for later reference.
+
+We will have a closer look at the capabilities document in paragraph \ref{parGetCap_II}
 
 ## Retrieve data from a WFS service: `request=GetFeature` \label{GetFeaturePar}
 
@@ -580,7 +582,7 @@ In this paragraph we will retrieve data from [Tilastokeskus (Statistics Finland)
 \begin{multicols}{2}
 And from this map it is especially the layer \textbf{Population 2017 by municipalities 2018 (kunta\_vaki2017)} we would like to investigate.
 
-We will follow the same steps as in the Dutch example above. For an explanation of the steps taken, please refer to paragraph \ref{GCnl} and \ref{GFnl}.
+We will follow the same steps as in the Dutch example above. For an explanation of the steps taken, please refer to paragraph \ref{parGetCap_I} and \ref{GFnl}.
 
 \includegraphics{Images/tklogo_fi.png}
 
@@ -722,7 +724,13 @@ request <- build_url(url)
 ```
 The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
 
-## Advanced topics
+\newpage
+
+## Advanced topics \label{parGetCap_II}
+
+In paragraph \ref{parGetCap_I} we have had a quick look at the answer to a `GetCapabilities` request. Here we will dive a little deeper into the information we can retrieve from this capabilities document.
+
+### outputFormat
 
 Not every WFS service supports GeoJSON as an output format. So how can we retrieve the output formats that are available? To answer this question we take a closer look at the capabilities document.
 
@@ -749,6 +757,10 @@ output_formats
 
 As we can see, GML and GeoJSON are not the only supported formats for this specific WFS. The service can also return the query result in a CSV or KML file.
 
+\newpage
+
+### FeatureType
+
 To get a list of all available feature types in a service, we can also inspect the capabilities document. Think of a feature type as a layer or dataset.
 
 ```{r}
@@ -756,6 +768,8 @@ xpath  <- "//wfs:FeatureType/wfs:Name"
 feature_types  <- doc %>% xml_find_all(xpath) %>% xml_text()
 head(feature_types) 
 ```
+
+### maxRecordCount
 
 Often the number of records returned by a service per request is limited to prevent performance issues caused by heavy requests. Therefore we should always check the maximum record count per request.
 
@@ -784,6 +798,8 @@ hits
 ```
 
 In this case the number of hits (`r format(hits, big.mark = ",")`) is smaller than the maximum record count per request (`r format(maxRecordCount, big.mark = ",")`). So we can fetch the entire dataset with one request.
+
+\newpage
 
 Let's put it all together in another example and query the Dutch Adresses en Buildings Register (Basisregistratie Adressen en Gebouwen) for the adresses in Hoek van Holland, a seaside town not far from The Hague.
 
@@ -822,6 +838,10 @@ Notice that we added `cql_filter=bag:woonplaats='Hoek van Holland'` to the reque
 
 Now the number of hits (`r format(hits, big.mark = ",")`) is greater than the maximum record count per request. We have hit the server limit. So how do we get all adresses if a request will not return more than `r format(maxRecordCount, big.mark = ",")`? The answer is simple: create more requests. This is called paging.
 
+\newpage
+
+### Paging
+
 For paging the parameters `sortBy`, `startIndex` and `count` come in handy. By adding `sortBy=bag:identificatie` to our request we ensure that the features returned, are sorted by their globally unique identifier. `startIndex` specifies the index of the first record. `count` is the number of records that the request should try to fetch. It is identical to the maximum record count.    
 
 Because we know the maximum record count and the number of hits, we can calculate the number of requests required to fetch all records in the query result. By increasing the `startIndex` for each subsequent request, we can eventually retrieve all adresses in Hoek van Holland.
@@ -852,7 +872,12 @@ adresses <- lapply(seq(0, hits, maxRecordCount), requestAdresses) %>% do.call(rb
 nrow(adresses)
 ```
 
-All `r nrow(format(adresses, big.mark = ","))` adresses in Hoek van Holland are fetched! To wrap it up, let's visualize them in an interactive map.
+All `r nrow(format(adresses, big.mark = ","))` adresses in Hoek van Holland are fetched!
+
+\newpage
+
+To wrap it up, let's visualize these addresses in an interactive map (see Figure \ref{HvH_interactive_map}):
+.
 
 ```{r eval = FALSE}
 library(tmap)
@@ -862,11 +887,20 @@ tm_shape(adresses) +  tm_dots(col = "black", scale = 0.1) +
   tm_legend(show = FALSE) + tm_view(basemaps = 'OpenStreetMap')
 ```
 
+\begin{figure}[H]
+\centering
+\caption{The BAG addresses in Hoek van Holland on an interactive map}
+\vspace{5pt}
 \includegraphics{Images/Hoek_van_Holland.png}
+\label{HvH_interactive_map}
+\end{figure}
+
+
 
 ## Further reading
 
-The OGC offers an official tutorial module - [OGC E-learning](http://cite.opengeospatial.org/pub/cite/files/edu/index.html) - covering it's activities and the several standards it maintains. The [specific chapter on WFS](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html) can be found [here](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html).
+* The official OGC Web Feature Service (WFS) Implementation Specification can be found here: [http://www.opengeospatial.org/standards/wfs](http://www.opengeospatial.org/standards/wfs)
+* The OGC offers an official tutorial module - [OGC E-learning](http://cite.opengeospatial.org/pub/cite/files/edu/index.html) - covering it's activities and the several standards it maintains. The [specific chapter on WFS](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html) can be found [here](http://cite.opengeospatial.org/pub/cite/files/edu/wfs/text/basic-index.html).
 
 \newpage
 
@@ -1050,16 +1084,17 @@ The variable `request` will now contain this [link](https://services.arcgis.com/
 
 ## Advanced topics
 
+### Capabilities of the hosted feature service
+
 So what exactly are the capabilities of a hosted feature service? To answer this question we can take a look at the information on the service in the ArcGIS REST Services Directory.     
 
-Let's give it a try. We'll query the [USA Rail Road](https://www.arcgis.com/home/item.html?id=d209f26edc86485a9c631311e50d9940) dataset in ESRI's Living Atlas of the World.     
+Let's give it a try. We'll query the [USA Rail Road](https://www.arcgis.com/home/item.html?id=d209f26edc86485a9c631311e50d9940) dataset in ESRI's Living Atlas of the World. This is data from the Federal Railroad Administration (FRA) which is passed on by Esri.
 
-The service URL is https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Railroads_1/FeatureServer.    
+The service URL is https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services/USA_Railroads_1/FeatureServer  
+
 A request to this URL will return the capabilities of the service:
 
 ```{r, message = FALSE, warning = FALSE}
-# USA: An example with USA Railroads data
-
 library(httr)
 library(data.table)
 library(dplyr)
@@ -1076,7 +1111,19 @@ url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/service
 response <- build_url(url) %>% fromJSON() 
 ```
 
-Notice that the format of the response is JSON instead of GeoJSON (query parameter `f = "json"`).    
+Notice that the format of the response is JSON instead of GeoJSON (query parameter `f = "json"`).   
+
+The `response` is a list with all the capabilities. Take some time to have a look at it.
+
+For example:
+```{r}
+response$description
+response$copyrightText
+```
+
+\newpage
+
+### Layers
 
 A hosted feature service can have multiple layers. Every layer has a name and an id. The id is necessary for constructing the appropriate URL to query the features.    
 
@@ -1100,6 +1147,8 @@ layer_path <- paste("USA_Railroads_1/FeatureServer", layer_id, sep = "/")
 layer_path
 ```
 
+### maxRecordCount
+
 The response also contains other valuable information like the maximum number of records returned per request:
 
 ```{r}
@@ -1111,6 +1160,8 @@ maxRecordCount <- response$maxRecordCount
 ```
 
 \newpage
+
+### Capabilities of an individual layer
 
 We can get even more information on the capabilities of the railroad layer:
 ```{r}
@@ -1125,6 +1176,8 @@ For example information on the fields in the dataset:
 ```{r}
 response$fields %>% select(name, type)
 ```
+
+### returnCountOnly
 
 So now we know the query URL, the maximum number of records returned per request and the fieldnames in the dataset. 
 We are ready to request the records!     
@@ -1145,7 +1198,12 @@ hits <- response$properties$count
 hits
 ```
 
-`r format(hits, big.mark = ",")` is way more that the maximum record count per request of `r format(maxRecordCount, big.mark = ",")`!    
+`r format(hits, big.mark = ",")` is way more that the maximum record count per request of `r format(maxRecordCount, big.mark = ",")`!
+
+\newpage
+
+### Automatic paging (by GDAL)
+
 Let's do a request to fetch the records.
 
 ```{r}
@@ -1187,7 +1245,6 @@ request <- build_url(url)
 railroads_in_use <- st_read(request)
 nrow(railroads_in_use)
 ```
-\newpage
 
 `r format(nrow(railroads_in_use), big.mark = ",")` is still a lot of records, but let's have a look at the result and add the railroads on top of a map of the USA:
 
@@ -1203,14 +1260,23 @@ request <- build_url(url)
 USA_States_2017 <- st_read(request)
 ```
 
+\newpage
+
 When we plot the rail network we do see a clear concentration in the Eastern part of the continent:
 
 ```{r railroads_map, results = 'hide'}
 library(tmap)
 
-tm_shape(USA_States_2017) + tm_borders("black") + tm_shape(railroads_in_use) +
-  tm_symbols(col = "red", scale = 0.1, border.lwd = NA) + tm_legend(show = FALSE) 
+tm_shape(USA_States_2017) +
+  tm_borders("black") +
+  tm_shape(railroads_in_use) +
+  tm_symbols(col = "red", scale = 0.1, border.lwd = NA) +
+  tm_legend(show = FALSE) 
 ```
+
+## Further reading
+
+* More on the **ArcGIS REST API** can be found at the ArcGIS for Developers pages: [https://developers.arcgis.com/rest/](https://developers.arcgis.com/rest/)
 
 \newpage
 
