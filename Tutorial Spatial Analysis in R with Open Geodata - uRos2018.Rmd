@@ -53,7 +53,7 @@ knitr::opts_chunk$set(error = TRUE)
 \href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
 \href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
 
-Version 0.7.6 - September 3, 2018
+Version 0.7.7 - September 6, 2018
 
 \subsection{Introduction}
 
@@ -158,7 +158,7 @@ library(sf)
 
 \newpage
 
-## `st_as_sf()`: converting a `data.frame` into an `sf` object
+## `st_as_sf()`: converting a `data.frame` into an `sf` object \label{simplefts}
 
 In this first exercise we will try to get some Dutch airports on the map. Let's start with defining some variables:
 
@@ -232,13 +232,15 @@ Our dataset is now both a `data.frame` and an `sf` object, with all the convenie
 
 \newpage
 
-And when we plot the data to the screen we can see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
+And when we plot this relatively simple dataset to the screen we can see the sheer beauty of our **Simple Features**: the original columns containing the lat\\lon information have been used to create a column containing points. And this geometry column is stored next to the attribute data, in the very same `data.frame`. Wonderful, isn't it? 
 
 ```{r}
 NL_Airports
 ```
 
-And we can plot our airports like this:
+Here we are talking only points, but in later exercises we will also see geometry columns containing lines and polygons.
+
+Now we can plot our airports like this:
 
 ```{r}
 plot(st_geometry(NL_Airports), main = "Airports in the Netherlands", pch = 17)
@@ -280,7 +282,7 @@ The shapefile format has been developed by \href{https://www.esri.com/}{Esri} an
 
 \newpage  
 
-### Export data to a GeoJSON file 
+### Export data to a GeoJSON file \label{parGeojsonfile}
 
 Another format we may use is GeoJSON (see Figure \ref{nl_airports_geojson_in_npp1}):
 
@@ -300,6 +302,35 @@ unlink("NL_Airports.geojson")
 \includegraphics{Images/nl_airports_geojson_in_npp.png}
 \label{nl_airports_geojson_in_npp1}
 \end{figure}
+
+## What about `sp`? (Our suggestion: Forget it!)
+
+When you start googling about spatial analysis with R, you will surely tumble into information about the package `sp`. So why would we not use that one? The answer is simple: `sp` is the predecessor of `sf`.
+
+The package `sp` provides classes and methods for spatial data and yes, for many years, it were these classes and methods you had to use to get your spatial data into R. For a long time, `sp` was at the heart of everything spatial in R. But those days are over now, as `sf` is rapidly taking over.
+
+No, `sp` is not entirely obsolete yet. It is still actively maintained and you can find it on CRAN:
+
+**The package `sp` on CRAN:**  
+[https://cran.r-project.org/package=sp](https://cran.r-project.org/package=sp)
+
+So, how can we be so sure about our suggestion to try not to use `sp` then?
+
+That has to do with the way the geometry is handled in both packages. In a way you could compare the way the data is stored using the `sp` package with the Esri shapefile mentioned in paragraph \ref{esrishape}: in an `sp Spatial*` object the attribute data and the geometry are stored separately, whereas in an `sf` object the geometry is stored in a column in the dataframe itself (see paragraph \ref{simplefts}).
+
+Please note: the `sf` package is created by Eder Pebesma, together with Roger Bivand. And Pebesma and Bivand are also the main driving forces behind `sp`. So, also in that sense `sf` is really a succesor - and not a competitor - to `sp`. Apparently we had to go through this `sp` phase first, just like we needed the Esri Shapefile once...
+
+It is Pebesma himself who stated in his first [`sf` vignette](https://cran.r-project.org/web/packages/sf/vignettes/sf1.html): "The package `sf` aims at succeeding `sp` in the long term." And developments in that direction are going lightning-fast.
+
+So, let's look forward
+
+### No further reading
+
+Throughout this manual you will find suggestions for further reading, but for the title below we really suggest **no** further reading:
+
+* **Bivand, Roger S., Edzer Pebesma and Virgilio Gómez-Rubio** (2013), *Applied Spatial Data Analysis with R*. Second Edition. Springer-Verlag New York.
+
+Why? This book was the standard source on spatial data analysis with R, written by the creators of the `sp` package, written in a time that thinking about `simple features` had barely begun. If you manage to lay your hand on a copy, we would surely recommend you to browse through it, if only for historical reasons. But as explained above, your main focus for now should be the future-proof package `sf`.
 
 ## Further reading
 
