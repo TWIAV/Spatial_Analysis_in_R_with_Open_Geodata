@@ -90,7 +90,7 @@ The whole project is a work in progress, so comments, suggestions, code samples 
 ## Packages to install
 
 These are the packages you will at least need during the course:  
-`cbsodataR`, `data.table`, `dplyr`, `httr`, `knitr`, `jsonlite`, `mapview`, `sf`, `stringr` and `tmap`.
+`cbsodataR`, `data.table`, `dplyr`, `httr`, `knitr`, `jsonlite`, `mapview`, `sf`, `stringr`, `tmap` and `units`.
 
 **Pro tip**: use the function `purl()` to extract all the R code from the manual:
 
@@ -1813,12 +1813,14 @@ A good introduction into Spatial Refernce Systems in R (and many other topics R 
 
 # Manipulating Spatial Data \label{ChapMan}
 
+## Reading the datasets
+
 \begin{multicols}{2}
 
 The municipality of The Hague publishes some nice datasets on \url{http://denhaag.dataplatform.nl}. We'll use some of them to learn more about manipulating spatial data:
 
 \begin{itemize}
-\item{Districts (polygons)}
+\item{Neighborhoods (polygons)}
 \item{Trees (points)}
 \item{Bat flight paths (lines)}
 \end{itemize}
@@ -1827,33 +1829,48 @@ The municipality of The Hague publishes some nice datasets on \url{http://denhaa
 
 \end{multicols}
 
-```{r message = FALSE, warning = FALSE, results = 'hide'}
+```{r}
 library(sf)
 library(dplyr)
 
-# Districts in The Hague
+# Neighborhoods in The Hague
 url <- "https://ckan.dataplatform.nl/dataset/c1059cef-be66-4a7a-9657-2f38f55794ed/resource/a175afe5-67e2-4e45-8b71-62f30377bf7d/download/wijken.json"
-districts <- st_read(url) %>% select(code = WIJKCODE, name = WIJKNAAM)
+neighborhoods <- st_read(url)
+```
 
+Please note: the Spatial Reference System of this dataset is WGS84, i.e. a geographic coordinate system. In chapter \ref{ChapCRS} we have learned that if you want to make measurements, you should use a projected  coordinate system.
+
+Therefor we reproject the dataset to RD_New (RD_New or EPSG:28992 is the projected coordinate system for The Netherlands):
+
+```{r}
+neighborhoods <- st_transform(neighborhoods, 28992)
+```
+
+
+\newpage
+
+```{r}
 # Trees in The Hague
-url <- "https://ckan.dataplatform.nl/dataset/dd3873f6-b2d0-42e8-94c7-f7b47dcb71f0/resource/7ac8ba4a-586e-43f2-b12e-014079c83f00/download/bomen-csv.zip"
+url <- "https://ckan.dataplatform.nl/dataset/d604d9bb-8c2f-4e7d-a69c-ee6102890baf/resource/85327fde-9e76-40f3-a8d4-25970896fd8f/download/bomen-json.zip"
 zip_file <- tempfile(fileext = ".zip")
 download.file(url, destfile = zip_file, mode = "wb")
 dir.create("./Data", showWarnings = FALSE)
 unzip(zip_file, exdir = "./Data")
 unlink(zip_file)
 rm(url, zip_file)
-trees <- read.csv("./Data/bomen.csv", quote = "", sep = ";") %>%
-         st_as_sf(coords = c("LONG","LAT"), crs = 4326) %>%
+trees <- st_read("Data/bomen-json.json") %>%
          select(id = ID, species = BOOMSOORT_WETENSCHAPPELIJ, age = LEEFTIJD)
 ```
 
 \newpage
 
-```{r message = FALSE, warning = FALSE, results = 'hide'}
+```{r}
 # Bat flight routes in The Hague
 url <- "https://ckan.dataplatform.nl/dataset/c7e9cb41-3b2d-47a4-9f1e-60ee7708f561/resource/ed7d5778-c890-4f4e-bfc3-048923761ace/download/vleermuisroutes.json"
 bat_flight_paths <- st_read(url) %>% select(func = FUNCTIE, id = COUNTER)
+```
+
+```{r}
 levels_dutch <- c("Migratieroute water- en meervleermu", 
                   "Vliegroute gewone dwergvleermuis", 
                   "Vliegroute laatvlieger", 
@@ -1868,62 +1885,100 @@ bat_flight_paths$func <-
   plyr::mapvalues(bat_flight_paths$func, from = levels_dutch, to = levels_eng)
 ``` 
 
-You should always check whether all your datasets are in the same CRS:
+We will also reproject this dataset:
 
 ```{r}
-st_crs(districts)
-st_crs(trees)
-st_crs(bat_flight_paths)
-```
-
-The datasets are in the same CRS, namely WGS84 also known as EPSG:4326. Let's transform the data to RD_New to avoid warning messages in R later on in our analysis. RD_New or EPSG:28992 is the projected coordinate system for The Netherlands.    
-
-```{r}
-districts <- st_transform(districts, 28992)
-trees <- st_transform(trees, 28992)
 bat_flight_paths <- st_transform(bat_flight_paths, 28992)
 ```
 
 \newpage
 
-## Length, area and distance
-Let's begin with a simple question: What is the largest district in The Hague?
+## `st_area()`
+
+When we have a look at the dataset `neighborhoods` in the RStudio Data Viewer (`View(neighborhoods)`) we will notice a column called OPPERVLAKTE, meaning 'AREA'. This is a numeric field:
 
 ```{r}
-districts$area <- st_area(districts)
-districts %>% filter(area == max(area)) %>% select(name, area) %>% st_set_geometry(NULL)
+class(neighborhoods$OPPERVLAKTE)
 ```
+**Please note:** it is bad habbit to store the AREA of a polygon in a permanent attribute field. Why? When a polygon is edited, the actual area of the object will change, but this static attribute value will remain the same.
 
-We don't want the area in square meters, but in square kilometers. That should be easy:
+So, it is best to only retrieve the area of our polygons when we actually need them in our analysis. To do so we can use the function `st_area()`:
 
 ```{r}
-districts %>% filter(area == max(area)) %>% 
-              select(name, area) %>% 
-              mutate(area = area / 10000) %>% 
-              st_set_geometry(NULL)
+neighborhoods$area <- st_area(neighborhoods)
 ```
 
-This isn't right. The units are still square meters!     
-The units are set according to the CRS. This is a good thing, because different CRSs use different units. Some of them use meters, others use feet.    
-However, in this case you need to change the units (and there is no need to divide by 10,000):
+This is a 'units' field, with the units being square meters (the units are set according to the CRS)
 
 ```{r}
-districts %>% filter(area == max(area)) %>% 
-              select(name, area) %>% 
-              mutate(area = units::set_units(area, ha)) %>% 
-              st_set_geometry(NULL)
+class(neighborhoods$area)
 ```
 
-That's better!    
-Next question: What are the five shortest bat flight routes? Print the lengths in kilometers - with two numbers after the decimal point. 
+In this case, when we compare the content of the column `OPPERVLAKTE` with that of our newly created column `area` the values are still the same:
+
+```{r}
+neighborhoods[,c("OPPERVLAKTE","area")]
+```
+
+Now, let's rename our columns to English equivalents for further analysis (dropping this silly OPPERVLAKTE and some other irrelevant fields on the fly):
+
+```{r}
+neighborhoods <- neighborhoods %>%
+                 select(nh_code = WIJKCODE, nh_name = WIJKNAAM, district_code = STADSDEELCODE)
+```
+
+\newpage
+
+## The package `units` with the function `set_units()`
+
+Here we would like to introduce the package `units` - also created by Edzer Pebesma - which provides support for measurement units in R.
+
+**The package `units` on CRAN:**  
+[https://cran.r-project.org/package=units](https://cran.r-project.org/package=units)
+
+As we have seen in the previous paragraph - when we retreive the area of a polygon with the function `st_area()` the units will be taken from the CRS:
+
+```{r}
+neighborhoods$area <- st_area(neighborhoods)
+```
+
+But we think it a bit strange to talk about neighborhood size in terms of square meters. Don't you agree? We would rather know these values in square kilometers. Let's use the function `set_units()` to convert the values:
+
+```{r}
+library(units)
+neighborhoods$area2 <- set_units(neighborhoods$area, km^2)
+```
+
+And we may also want to round these values to 2 digits:
+
+```{r}
+neighborhoods$area3 <- round(neighborhoods$area2, digits = 2)
+```
+
+And now it is simple to answer the following question: What is the largest neighborhood in The Hague?
+
+```{r}
+neighborhoods %>% filter(area == max(area)) %>% st_set_geometry(NULL)
+```
+
+## `st_length()`
+
+In a similar way we can retrieve the length of line objects:
 
 ```{r}
 bat_flight_paths$length <- st_length(bat_flight_paths)
-bat_flight_paths %>% mutate(length = round(units::set_units(length, km), 2)) %>% 
-                     arrange(length) %>% 
+```
+
+Next question: What are the five shortest bat flight routes?
+
+```{r}
+bat_flight_paths %>% arrange(length) %>% 
                      st_set_geometry(NULL) %>% 
                      head(n = 5)
 ```
+\newpage
+
+## `st_distance()`
 
 How many meters are tree 1351893 and 1398051 apart from each other?
 
@@ -1963,55 +2018,64 @@ trees %>% select(species, age) %>%
           head(n = 3)
 ```
 
-But you can also aggregate spatial data, for instance calculate the city border using the districts dataset:
+## Spatial aggregation
+
+You can also aggregate spatial data, for instance calculate the city border using the neighborhoods dataset:
 
 ```{r}
-the_hague <- st_union(districts)
-
-tmap_mode("plot")
-tm_shape(the_hague) +
-  tm_borders("red", lwd = 2, lty = "dashed") +
-tm_shape(districts) +
-  tm_borders(col = "grey", alpha = 0.5) +
-tm_layout(frame = FALSE) + 
-tm_legend(show = FALSE)
+the_hague <- st_union(neighborhoods)
 ```
 
-Or calculate the total number of trees for each district:
+Or you can group the neighborhoods by district:
+
+```{r}
+the_hague_districts <- neighborhoods %>% group_by(district_code) %>% summarise()
+```
+
+```{r}
+tm_shape(neighborhoods) +
+  tm_borders(col = "grey", alpha = 0.5) +
+tm_shape(the_hague_districts) +
+  tm_borders(col = "blue", lwd = 2, alpha = 0.5) +
+tm_shape(the_hague) +
+  tm_borders("red", lwd = 3) +
+tm_layout(frame = FALSE)
+```
+
+Or calculate the total number of trees for each neighborhood:
 
 ```{r warning = FALSE}
-districts$total_trees <- lengths(st_covers(districts, trees))
+neighborhoods$total_trees <- lengths(st_covers(neighborhoods, trees))
 ```
 
 It's always a good idea the verify your outcomes.
 
 ```{r}
 nrow(trees)
-sum(districts$total_trees)
+sum(neighborhoods$total_trees)
 ```
 
-We're short `r nrow(trees) - sum(districts$total_trees)` trees in the district dataset! Where did those trees go?
+We're short `r nrow(trees) - sum(neighborhoods$total_trees)` trees in the neighborhood dataset! Where did those trees go?
 
 ```{r message = FALSE}
-trees_not_in_district <- trees[the_hague, op = st_disjoint]
-nrow(trees_not_in_district)
+trees_not_in_neighborhood <- trees[the_hague, op = st_disjoint]
+nrow(trees_not_in_neighborhood)
 ``` 
 
-`r nrow(trees_not_in_district)` trees are not in a district of The Hague. Let's make a plot:
+`r nrow(trees_not_in_neighborhood)` trees are not in a neighborhood of The Hague. Let's make a plot:
 
 ```{r message = FALSE}
-tmap_mode("plot")
-tm_shape(districts) +
+tm_shape(neighborhoods) +
   tm_borders("black") +
 tm_shape(trees) +
   tm_symbols(col = "darkgreen", scale = 0.05, border.lwd = NA) +
-tm_shape(trees_not_in_district) +
+tm_shape(trees_not_in_neighborhood) +
   tm_symbols(col = "red", scale = 0.05, border.lwd = NA) +
 tm_layout(frame = FALSE) + 
 tm_legend(show = FALSE)
 ```
 
-To be on the safe side, we'll remove all the trees from our dataset that are outside the districts. These are the red trees in the plot.
+To be on the safe side, we'll remove all the trees from our dataset that are outside the neighborhoods. These are the red trees in the plot.
 
 ```{r message = FALSE, warning = FALSE}
 trees <- trees[the_hague, op = st_intersects]
@@ -2020,13 +2084,12 @@ nrow(trees)
 
 \newpage
 
-Another example of applying a spatial filter: Where are the bat flight paths in the Zorgvliet district?
+Another example of applying a spatial filter: Where are the bat flight paths in the Zorgvliet neighborhood?
 
 ```{r message = FALSE, warning = FALSE}
-zorgvliet <- filter(districts, name == "Zorgvliet")
+zorgvliet <- filter(neighborhoods, nh_name == "Zorgvliet")
 bat_flight_paths_zorgvliet <- bat_flight_paths[zorgvliet, op = st_intersects]
 
-tmap_mode("plot")
 tm_shape(zorgvliet) +
   tm_borders("black") +
 tm_shape(bat_flight_paths_zorgvliet) +
@@ -2035,13 +2098,12 @@ tm_layout(frame = FALSE) +
 tm_legend(show = FALSE)
 ```
 
-That's kind of ugly, those flight paths running outside the district. Let's cut them on the district border. Also add the trees to the plot.
+That's kind of ugly, those flight paths running outside the neighborhood. Let's cut them on the neighborhood border. Also add the trees to the plot.
 
 ```{r message = FALSE, warning = FALSE}
 bat_flight_paths_zorgvliet <- st_intersection(bat_flight_paths, zorgvliet)
 trees_zorgvliet <- st_intersection(trees, zorgvliet)
 
-tmap_mode("plot")
 tm_shape(zorgvliet) +
   tm_borders("black") +
 tm_shape(trees_zorgvliet) +
@@ -2055,22 +2117,21 @@ tm_legend(show = FALSE)
 
 ## Calculating and visualizing density 
 
-Note that the dataset only contains trees in public space. But still, the tree density may give us an idea of how 'green' a district is.   
+Note that the dataset only contains trees in public space. But still, the tree density may give us an idea of how 'green' a neighborhood is.   
 
-What are the districts with the least and the most trees?
+What are the neighborhoods with the least and the most trees?
 
 ```{r}
-districts$name[which.min(districts$total_trees)] %>% as.character()
-districts$name[which.max(districts$total_trees)] %>% as.character()
+neighborhoods$nh_name[which.min(neighborhoods$total_trees)] %>% as.character()
+neighborhoods$nh_name[which.max(neighborhoods$total_trees)] %>% as.character()
 ```
 
-`r districts$name[which.min(districts$total_trees)] %>% as.character()` is a district with no trees at all in public space. Let's find out where it is.
+`r neighborhoods$name[which.min(neighborhoods$total_trees)] %>% as.character()` is a neighborhood with no trees at all in public space. Let's find out where it is.
 
 ```{r message = FALSE}
-no_trees <- filter(districts, total_trees == 0)
+no_trees <- filter(neighborhoods, total_trees == 0)
 
-tmap_mode("plot")
-tm_shape(districts) +
+tm_shape(neighborhoods) +
   tm_borders("black") +
 tm_shape(no_trees) +
   tm_fill("grey") +
@@ -2080,12 +2141,12 @@ tm_layout(frame = FALSE) +
 tm_legend(show = FALSE)
 ```
 
-Now visualize the tree density for each district in The Hague.
+Now visualize the tree density for each neighborhood in The Hague.
 
 ```{r}
-districts$tree_density <- 
-  round(districts$total_trees / units::set_units(districts$area, km^2))
-qtm(shp = districts, fill = "tree_density", 
+neighborhoods$tree_density <- 
+  round(neighborhoods$total_trees / units::set_units(neighborhoods$area, km^2))
+qtm(shp = neighborhoods, fill = "tree_density", 
 fill.palette = "Greens",
 fill.style = "kmeans", title = "Tree density",
 fill.title = parse(text = "trees/km^2"))
