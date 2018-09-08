@@ -53,7 +53,7 @@ knitr::opts_chunk$set(error = TRUE)
 \href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
 \href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
 
-Version 0.7.7 - September 6, 2018
+Version 0.7.8 - September 8, 2018
 
 \subsection{Introduction}
 
@@ -288,11 +288,6 @@ Another format we may use is GeoJSON (see Figure \ref{nl_airports_geojson_in_npp
 
 ```{r}
 st_write(NL_Airports, "NL_Airports.geojson")
-```
-
-```{r echo = FALSE}
-# Delete the output files to keep the repository clean
-unlink("NL_Airports.geojson")
 ```
 
 \begin{figure}[H]
@@ -832,7 +827,7 @@ In this case the number of hits (`r format(hits, big.mark = ",")`) is smaller th
 
 \newpage
 
-Let's put it all together in another example and query the Dutch Adresses en Buildings Register (Basisregistratie Adressen en Gebouwen) for the adresses in Hoek van Holland, a seaside town not far from The Hague.
+Let's put it all together in another example and query the Dutch Addresses en Buildings Register (Basisregistratie Adressen en Gebouwen) for the addresses in Hoek van Holland, a seaside town not far from The Hague.
 
 ```{r}
 url <- list(hostname = "geodata.nationaalgeoregister.nl/bag/wfs",
@@ -865,9 +860,9 @@ hits <- doc %>% xml_find_first(xpath) %>% xml_integer()
 hits
 ```
 
-Notice that we added `cql_filter=bag:woonplaats='Hoek van Holland'` to the request to filter out only adresses in Hoek van Holland.
+Notice that we added `cql_filter=bag:woonplaats='Hoek van Holland'` to the request to filter out only addresses in Hoek van Holland.
 
-Now the number of hits (`r format(hits, big.mark = ",")`) is greater than the maximum record count per request. We have hit the server limit. So how do we get all adresses if a request will not return more than `r format(maxRecordCount, big.mark = ",")`? The answer is simple: create more requests. This is called paging.
+Now the number of hits (`r format(hits, big.mark = ",")`) is greater than the maximum record count per request. We have hit the server limit. So how do we get all addresses if a request will not return more than `r format(maxRecordCount, big.mark = ",")`? The answer is simple: create more requests. This is called paging.
 
 \newpage
 
@@ -875,7 +870,7 @@ Now the number of hits (`r format(hits, big.mark = ",")`) is greater than the ma
 
 For paging the parameters `sortBy`, `startIndex` and `count` come in handy. By adding `sortBy=bag:identificatie` to our request we ensure that the features returned, are sorted by their globally unique identifier. `startIndex` specifies the index of the first record. `count` is the number of records that the request should try to fetch. It is identical to the maximum record count.    
 
-Because we know the maximum record count and the number of hits, we can calculate the number of requests required to fetch all records in the query result. By increasing the `startIndex` for each subsequent request, we can eventually retrieve all adresses in Hoek van Holland.
+Because we know the maximum record count and the number of hits, we can calculate the number of requests required to fetch all records in the query result. By increasing the `startIndex` for each subsequent request, we can eventually retrieve all addresses in Hoek van Holland.
 
 ```{r, message = FALSE, warning = FALSE, results = 'hide'}
 library(sf)
@@ -890,20 +885,20 @@ url$query <- list(service = "wfs",
                   count = maxRecordCount,
                   sortBy = "bag:identificatie")
 
-requestAdresses <- function(x) {
+requestAddresses <- function(x) {
   url$query$startIndex <- x
   request <- build_url(url) 
   st_read(request, stringsAsFactors = FALSE)
 }
 
-adresses <- lapply(seq(0, hits, maxRecordCount), requestAdresses) %>% do.call(rbind, .)
+addresses <- lapply(seq(0, hits, maxRecordCount), requestAddresses) %>% do.call(rbind, .)
 ```
 
 ```{r}
-nrow(adresses)
+nrow(addresses)
 ```
 
-All `r nrow(format(adresses, big.mark = ","))` adresses in Hoek van Holland are fetched!
+All `r nrow(format(addresses, big.mark = ","))` addresses in Hoek van Holland are fetched!
 
 \newpage
 
@@ -914,7 +909,7 @@ To wrap it up, let's visualize these addresses in an interactive map (see Figure
 library(tmap)
 
 tmap_mode('view')
-tm_shape(adresses) +  tm_dots(col = "black", scale = 0.1) + 
+tm_shape(addresses) +  tm_dots(col = "black", scale = 0.1) + 
   tm_legend(show = FALSE) + tm_view(basemaps = 'OpenStreetMap')
 ```
 
@@ -1664,7 +1659,7 @@ Please note: in the statement above we only select 2 columns, but the resulting 
 Now we will rename the columns:
 
 ```{r}
-NL_Municipalities2017 <- rename(NL_Municipalities2017, Code = statcode, Name = statnaam)
+NL_Municipalities2017 <- rename(NL_Municipalities2017, Code = statcode, Name2 = statnaam)
 ```
 
 Both datasets do contain a column with municipal codes, so now you can merge them, like you would do with any two data frames:
@@ -1800,6 +1795,25 @@ A `proj4string` definition contains different parameters such as the projection 
 \newpage
 
 ## Reprojecting data
+
+```{r}
+NL_Airports <- st_read("NL_Airports.geojson")
+```
+
+```{r}
+NL_Airports <- st_join(NL_Airports, NL_Municipalities2017)
+```
+
+```{r}
+NL_Airports <- st_join(st_transform(NL_Airports, 28992), NL_Municipalities2017[,c("Name","Province_name","Region_name")])
+NL_Airports
+```
+
+```{r echo = FALSE}
+# Delete the output files to keep the repository clean
+unlink("NL_Airports.geojson")
+```
+
 
 ## Further reading
 
@@ -2162,6 +2176,144 @@ Again notice that this plot gives a distorted view of reality, because the datas
 # Delete the Data directory to keep the repository clean
 unlink("./Data", recursive = TRUE)
 ```
+
+\newpage
+
+# Geocoding
+
+Often we will have a spreadsheet with addresses, but no coordinates linked to them. Before we can do any spatial analysis, we will have to _geocode_ the addresses.
+
+## Geocoding with OpenStreetMap and Nominatim
+
+We can geocode addresses using Nominatim, a geocoding API for OpenStreetMap.
+
+```{r message = FALSE}
+library(dplyr)
+library(httr)
+library(data.table)
+library(jsonlite)
+library(sf)
+
+url <- list(hostname = "nominatim.openstreetmap.org",
+            scheme = "http",
+            path = paste("search", URLencode("Martinikerkhof 3 Groningen"), sep = "/"),
+            query = list(format = "json", adressdetails = 0, limit = 1)) %>% 
+       setattr("class","url")
+request <- build_url(url)
+result <- fromJSON(request) %>% 
+          mutate(lat = as.numeric(lat),lon = as.numeric(lon)) %>%
+          select(lat, lon, display_name)
+result
+```
+
+Creating a `sf` object is easy now.
+
+```{r}
+martini_tower <- st_as_sf(result, coords = c("lon", "lat"), crs = 4326)
+martini_tower
+```
+
+Now we can put the Martini Toren on the map!
+
+```{r eval=FALSE}
+library(tmap)
+
+tmap_mode('view')
+tm_shape(martini_tower) + tm_markers() +
+  tm_legend(show = FALSE) + tm_view(basemaps = 'OpenStreetMap')
+```
+
+\includegraphics{Images/martini_tower.png}
+
+Let's do some batch geocoding.
+
+```{r}
+url <- list(hostname = "nominatim.openstreetmap.org",
+            scheme = "http",
+            query = list(format = "json", adressdetails = 0, limit = 1)) %>% 
+       setattr("class","url")
+
+geocodeAddress <- function(x){
+  url$path <- paste("search", URLencode(x[2]), sep = "/")
+  request <- build_url(url)
+  result <- fromJSON(request)
+  data.frame(name = x[1], address = result$display_name, 
+            lat = as.numeric(result$lat), lon = as.numeric(result$lon),
+            row.names = x[1], stringsAsFactors = FALSE)
+}
+
+name <- c("Martinitoren", "Sint-Janskerk", "Onze-Lieve-Vrouwekathedraal")
+address <- c("Martinikerkhof 3 Groningen", "Vrijthof 24 Maastricht", "Groenplaats 21 Antwerpen")
+poi <- data.frame(name, address, stringsAsFactors = FALSE)
+
+poi <- apply(poi, 1, geocodeAddress) %>% 
+       bind_rows() %>% 
+       st_as_sf(coords = c("lon","lat"), crs = 4326)
+poi
+```
+
+## Geocoding with the BAG and Locatieserver (only for The Netherlands)
+
+The Dutch National Spatial Data Infrastructure ([PDOK](http://www.pdok.nl)) is a central facility for unlocking geospatial open data of national importance. This is actual and reliable information for both the public and private sector.    
+PDOK provides API's, for instance [Locatieserver](https://github.com/PDOK/locatieserver). Locatieserver is a very powerfull geocoding service. Upon request it will return the location of an adress in The Netherlands.
+There doesn't necessarily has to be a 100% match with the names and adresses in the PDOK dataset. Every search result will have a score indicating the level of success. 
+
+```{r message = FALSE}
+library(dplyr)
+library(httr)
+library(data.table)
+library(jsonlite)
+library(sf)
+
+url <- list(hostname = "geodata.nationaalgeoregister.nl",
+            scheme = "https",
+            path = paste("locatieserver/v3/free"),
+            query = list(q = "'Martinikerkhof 3 Groningen' and type:adres", rows = 1)) %>% 
+       setattr("class","url")
+request <- build_url(url)
+result <- fromJSON(request) 
+martini_tower <- data.frame(addres = result$response$docs$weergavenaam, 
+                            wkt = result$response$docs$centroide_rd) %>% 
+                 st_as_sf(wkt = 2, crs = 28992)
+
+martini_tower
+```
+
+In the previous example we selected the response attribute `centroide_rd`. This attribute contains the location in Well-Known Text (WKT) format and coordinate reference system RD_New (EPSG:28992).   
+If we want the coordinates to be in WGS84 (EPSG:4326), we can select `centroide_ll`. 
+
+Of course, you can also use Locatieserver for batch geocoding:
+
+```{r}
+url <- list(hostname = "geodata.nationaalgeoregister.nl",
+            scheme = "https",
+            path = paste("locatieserver/v3/free"),
+            query = list(rows = 1)) %>% 
+       setattr("class","url")
+
+geocodeAddress <- function(x){
+  url$query$q <- paste("'", x[2], "'", "and type:adres")
+  request <- build_url(url)
+  result <- fromJSON(request)
+  data.frame(name = x[1], 
+             addres = result$response$docs$weergavenaam, 
+             wkt = result$response$docs$centroide_rd, 
+             score = result$response$docs$score, 
+             stringsAsFactors = FALSE)
+}
+
+name <- c("Martinitoren", "Sint-Janskerk", "Onze-Lieve-Vrouwekathedraal")
+address <- c("Martinikerkhof 3 Groningen", "Vrijthof 24 Maastricht", 
+             "Groenplaats 21 Antwerpen")
+poi <- data.frame(name, address)
+
+poi <- apply(poi, 1, geocodeAddress) %>% 
+       bind_rows() %>% 
+       st_as_sf(wkt = 3, crs = 28992)
+poi
+```
+
+Notice that the search result for the address of the Onze-Lieve-Vrouwe kathedraal (Cathedral of Our Lady) in Antwerp is wrong. According to the search result it is located in the Dutch town Doetinchem! Remember that Locatieserver will only return coordinates for addresses in The Netherlands. If it cannot find an exact match in its database, it will try to find an address that is similar. Every search result will have a score indicating the level of success. The score for the Onze-lieve-Vrouwe kathedraal is low. We should examine the scores of the search results and decide what to do with the low ones.
 
 \newpage
 
