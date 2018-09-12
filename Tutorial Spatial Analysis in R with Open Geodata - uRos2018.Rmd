@@ -40,6 +40,70 @@ urlcolor: blue
 \newpage
 
 ```{r setup, include=FALSE, cache = FALSE}
+
+# Set an output hook to split st_read output so it doesn't extend beyond line width
+knitr::knit_hooks$set(
+  # modify the output
+  output = function(x, options){
+    
+    # Split in lines
+    lines <- unlist(strsplit(x, split = "\n"))
+    
+    #--------------------------------------------------------------------------*
+    # modify the lines we expect to bleed out of the margins ----
+    #--------------------------------------------------------------------------*
+    
+    # For the dsn specification
+    lines <- gsub(
+      pattern = "' ",
+      replacement = "'\n## \t",
+      x = lines
+    )
+    lines <- unlist(sapply(lines, strsplit, split = "\n"))
+    
+    
+    # For the dsn file path
+    lines <- ifelse(
+      test = grepl("from data source ", lines),
+      # Adjust so segments are split in /
+      yes = gsub(
+        pattern = "/([^/]*)\n",
+        replacement = "/\n## \t\\1",
+        # Split in fixed width segments
+        x = gsub(
+          pattern = "(.{,65})",
+          replacement = "\\1\n",
+          x = lines
+        )
+      ),
+      no = lines
+    )
+    
+    
+    # For the proj4 string specifications
+    lines <- ifelse(
+      test = grepl("proj4string:", lines),
+      yes = gsub(
+        pattern = "[+]",
+        replacement = "\n## \t+",
+        x = lines
+      ),
+      no = lines
+    )
+    
+    # bind the lines
+    x <- paste(
+      "```",
+      paste0(lines, collapse = "\n"),
+      "```",
+      sep = "\n"
+    )
+    
+    return(x)
+  }
+)
+
+
 knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60), tidy = TRUE, strip.white = FALSE, echo = TRUE)
 knitr::opts_chunk$set(error = TRUE)
 ```
