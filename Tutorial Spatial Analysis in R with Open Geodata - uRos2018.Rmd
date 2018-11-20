@@ -117,7 +117,7 @@ knitr::opts_chunk$set(error = TRUE)
 \href{https://www.linkedin.com/in/ejhpolle/}{Egge-Jan Pollé} - Tensing GIS Consultancy B.V.\\
 \href{https://www.linkedin.com/in/willytadema/}{Willy Tadema} - Provincie Groningen  
 
-Version 0.7.8 - September 8, 2018
+Version 0.8.0 - November 11, 2018
 
 \subsection{Introduction}
 
@@ -154,7 +154,7 @@ The whole project is a work in progress, so comments, suggestions, code samples 
 ## Packages to install
 
 These are the packages you will at least need during the course:  
-`cbsodataR`, `data.table`, `dplyr`, `httr`, `knitr`, `jsonlite`, `mapview`, `sf`, `stringr`, `tmap` and `units`.
+`cbsodataR`, `dplyr`, `httr`, `knitr`, `jsonlite`, `mapview`, `sf`, `stringr`, `tmap` and `units`.
 
 **Pro tip**: use the function `purl()` to extract all the R code from the manual:
 
@@ -629,20 +629,16 @@ This is the script to populate the full request:
 
 ```{r}
 # NL: Example with Dutch data
+library(httr)
 library(sf)
 library(tmap)
-library(httr)
-library(data.table)
 
-url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetFeature",
-                         typename = 
-                           "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
-                         outputFormat = "application/json")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                  outputFormat = "application/json")
 request <- build_url(url)
 ```
 
@@ -687,19 +683,16 @@ The script to build the full URL is similar to the one before - the only paramet
 
 ```{r}
 # FI: Example with Finnish data
+library(httr)
 library(sf)
 library(tmap)
-library(httr)
-library(data.table)
 
-url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetFeature",
-                         typename = "vaestoalue:kunta_vaki2017",
-                         outputFormat = "application/json")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geo.stat.fi/geoserver/vaestoalue/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "vaestoalue:kunta_vaki2017",
+                  outputFormat = "application/json")
 request <- build_url(url)
 ```
 
@@ -773,17 +766,14 @@ The `GetFeature` request below limits the number of Finnish municipalities retur
 ```{r}
 # FI: Example with Finnish data
 library(httr)
-library(data.table)
 
-url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetFeature",
-                         typename = "vaestoalue:kunta_vaki2017",
-                         count = 5,
-                         outputFormat = "application/json")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geo.stat.fi/geoserver/vaestoalue/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "vaestoalue:kunta_vaki2017",
+                  count = 5,
+                  outputFormat = "application/json")
 request <- build_url(url)
 ```
 The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&count=5&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
@@ -799,17 +789,14 @@ The `GetFeature` request below only returns the geometry and the columns *nimi* 
 ```{r}
 # FI: Example with Finnish data
 library(httr)
-library(data.table)
 
-url <- list(hostname = "geo.stat.fi/geoserver/vaestoalue/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetFeature",
-                         typename = "vaestoalue:kunta_vaki2017",
-                         propertyname = "geom,nimi,vaesto",
-                         outputFormat = "application/json")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geo.stat.fi/geoserver/vaestoalue/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "vaestoalue:kunta_vaki2017",
+                  propertyname = "geom,nimi,vaesto",
+                  outputFormat = "application/json")
 request <- build_url(url)
 ```
 The variable `request` will now contain this [link](https://geo.stat.fi/geoserver/vaestoalue/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=vaestoalue%3Akunta_vaki2017&propertyname=geom%2Cnimi%2Cvaesto&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
@@ -825,19 +812,15 @@ In paragraph \ref{parGetCap_I} we have had a quick look at the answer to a `GetC
 Not every WFS service supports GeoJSON as an output format. So how can we retrieve the output formats that are available? To answer this question we take a closer look at the capabilities document.
 
 ```{r message = FALSE}
-library(magrittr)
 library(httr)
-library(data.table)
 library(xml2)
 
-url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetCapabilities")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetCapabilities")
 request <- build_url(url)
-doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml() 
+doc <- GET(request) %>% content(as = "text", encoding = "UTF-8") %>% read_xml() 
 xpath <- paste0("//ows:Operation[@name='GetFeature']",
                 "/ows:Parameter[@name='outputFormat']",
                 "/ows:AllowedValues/ows:Value")
@@ -874,12 +857,11 @@ So a request to the cbsgebiedsindelingen WFS will never return more than `r form
 To determine the number of hits before we actually fetch the query result, we can add `resultType=hits` to our `GetFeature` request: 
 
 ```{r}
-url$query = list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "cbsgebiedsindelingen:cbs_arbeidsmarktregio_2014_gegeneraliseerd",
-                 resultType = "hits") %>% 
-            setattr("class","url")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "cbsgebiedsindelingen:cbs_arbeidsmarktregio_2014_gegeneraliseerd",
+                  resultType = "hits") 
 request <- build_url(url)
 doc <- doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml() 
 xpath <- "//wfs:FeatureCollection/@numberMatched"
@@ -894,12 +876,10 @@ In this case the number of hits (`r format(hits, big.mark = ",")`) is smaller th
 Let's put it all together in another example and query the Dutch Addresses en Buildings Register (Basisregistratie Adressen en Gebouwen) for the addresses in Hoek van Holland, a seaside town not far from The Hague.
 
 ```{r}
-url <- list(hostname = "geodata.nationaalgeoregister.nl/bag/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetCapabilities")) %>% 
-            setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl/bag/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetCapabilities")
 request <- build_url(url)
 doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml() 
 xpath <- "//wfs:FeatureType/wfs:Name"
@@ -910,13 +890,12 @@ xpath <- "//ows:Constraint[@name='CountDefault']/ows:DefaultValue"
 maxRecordCount <- doc %>% xml_find_first(xpath) %>% xml_integer()
 maxRecordCount
 
-url$query = list(service = "WFS",
-                 version = "2.0.0",
-                 request = "GetFeature",
-                 typename = "bag:verblijfsobject",
-                 cql_filter = "bag:woonplaats='Hoek van Holland'",
-                 resultType = "hits") %>% 
-            setattr("class","url")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "bag:verblijfsobject",
+                  cql_filter = "bag:woonplaats='Hoek van Holland'",
+                  resultType = "hits")
 request <- build_url(url)
 doc <- GET(request) %>% content(as = "text", encoding="UTF-8") %>% read_xml()
 xpath <- "//wfs:FeatureCollection/@numberMatched"
@@ -1073,19 +1052,16 @@ This is the script to populate the full request:
 
 ```{r}
 # USA: An example with American data
+library(httr)
 library(sf)
 library(tmap)
-library(httr)
-library(data.table)
 
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = "USA_States_Generalized/FeatureServer/0/query",
-            query = list(where = "1=1",
-                         outFields = "*",
-                         returnGeometry = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, "USA_States_Generalized/FeatureServer/0/query", sep = "/")
+url$query <- list(where = "1=1",
+                  outFields = "*",
+                  returnGeometry = "true",
+                  f = "geojson")
 request <- build_url(url)
 ```
 
@@ -1130,16 +1106,13 @@ The `query` request below only returns those States which have more than 10 mill
 ```{r}
 # USA: An example with American data
 library(httr)
-library(data.table)
 
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = "USA_States_Generalized/FeatureServer/0/query",
-            query = list(where = "POPULATION>10000000",
-                         outFields = "STATE_NAME,POPULATION",
-                         returnGeometry = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, "USA_States_Generalized/FeatureServer/0/query", sep = "/")
+url$query <- list(where = "POPULATION>10000000",
+                  outFields = "STATE_NAME,POPULATION",
+                  returnGeometry = "true",
+                  f = "geojson")
 request <- build_url(url)
 ```
 
@@ -1155,16 +1128,13 @@ The `query` request below only returns the geometry and the columns STATE_NAME a
 ```{r}
 # USA: An example with American data
 library(httr)
-library(data.table)
 
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = "USA_States_Generalized/FeatureServer/0/query",
-            query = list(where = "1=1",
-                         outFields = "STATE_NAME,POPULATION",
-                         returnGeometry = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, "USA_States_Generalized/FeatureServer/0/query", sep = "/")
+url$query <- list(where = "1=1",
+                  outFields = "STATE_NAME,POPULATION",
+                  returnGeometry = "true",
+                  f = "geojson")
 request <- build_url(url)
 ```
 
@@ -1186,19 +1156,15 @@ A request to this URL will return the capabilities of the service:
 
 ```{r, message = FALSE, warning = FALSE}
 library(httr)
-library(data.table)
-library(dplyr)
 library(jsonlite)
 library(sf)
 ```
 ```{r}
-
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = "USA_Railroads_1/FeatureServer",
-            query = list(f = "json")) %>% 
-       setattr("class","url")
-response <- build_url(url) %>% fromJSON() 
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, "USA_Railroads_1/FeatureServer", sep = "/")
+url$query <- list(f = "json")
+request <- build_url(url)
+response <- fromJSON(request) 
 ```
 
 Notice that the format of the response is JSON instead of GeoJSON (query parameter `f = "json"`).   
@@ -1226,6 +1192,8 @@ response$layers$name
 The USA Rail Road hosted feature service only has one layer called *USA Railroads*. 
 
 ```{r}
+library(dplyr)
+
 layer_id <- response$layers %>% filter(name == 'USA Railroads') %>% select(id) 
 layer_id
 ```
@@ -1255,12 +1223,11 @@ maxRecordCount <- response$maxRecordCount
 
 We can get even more information on the capabilities of the railroad layer:
 ```{r}
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = layer_path,
-            query = list(f = "json")) %>% 
-       setattr("class","url")
-response <- build_url(url) %>% fromJSON() 
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, layer_path, sep = "/")
+url$query <- list(f = "json")
+request <- build_url(url)
+response <- fromJSON(request) 
 ```
 For example information on the fields in the dataset:
 ```{r}
@@ -1275,15 +1242,13 @@ We are ready to request the records!
 But wait, all the railroads in the United States of America, wouldn't that be *a lot* of records? Let's find out, before we fetch them all. We can do this by specifying the query parameter `returnCountOnly = "true"`:    
 
 ```{r}
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = paste(layer_path, "query", sep = "/"),
-            query = list(where = "1=1",
-                         returnCountOnly = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, layer_path, "query", sep = "/")
+url$query <- list(where = "1=1",
+                  returnCountOnly = "true",
+                  f = "geojson")
 request <- build_url(url)
-response <- build_url(url) %>% fromJSON() 
+response <- fromJSON(request) 
 hits <- response$properties$count
 hits
 ```
@@ -1297,14 +1262,12 @@ hits
 Let's do a request to fetch the records.
 
 ```{r}
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = paste(layer_path, "query", sep = "/"),
-            query = list(where = "1=1",
-                         outFields = "OBJECTID, NET_DESC",
-                         returnGeometry = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, layer_path, "query", sep = "/")
+url$query <- list(where = "1=1",
+                  outFields = "OBJECTID, NET_DESC",
+                  returnGeometry = "true",
+                  f = "geojson")
 request <- build_url(url)
 railroads <- st_read(request)
 ```
@@ -1321,14 +1284,12 @@ Well the GDAL library makes it very easy for us. It detects that multiple reques
 A lot of the railroads are labelled 'abandonned'. They need to be filtered out. Of course you can do this *after* you fetched the records, but this isn't very efficient. Let's change the parameter value of `where` in our request, so only railroads in use are included in the response. 
 
 ```{r}
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = paste(layer_path, "query", sep = "/"),
-            query = list(where = "NET_DESC <> 'Abandoned'",
-                         outFields = "OBJECTID, NET_DESC",
-                         returnGeometry = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, layer_path, "query", sep = "/")
+url$query <- list(where = "NET_DESC <> 'Abandoned'",
+                  outFields = "OBJECTID, NET_DESC",
+                  returnGeometry = "true",
+                  f = "geojson")
 request <- build_url(url)
 ```
 ```{r}
@@ -1339,13 +1300,11 @@ nrow(railroads_in_use)
 `r format(nrow(railroads_in_use), big.mark = ",")` is still a lot of records, but let's have a look at the result and add the railroads on top of a map of the USA:
 
 ```{r}
-url <- list(hostname = "services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services",
-            scheme = "https",
-            path = "USA_States_Generalized/FeatureServer/0/query",
-            query = list(where = "1=1",
-                         returnGeometry = "true",
-                         f = "geojson")) %>% 
-       setattr("class","url")
+url <- parse_url("https://services.arcgis.com/P3ePLMYs2RVChkJx/arcgis/rest/services")
+url$path <- paste(url$path, "USA_States_Generalized/FeatureServer/0/query", sep = "/")
+url$query <- list(where = "1=1",
+                  returnGeometry = "true",
+                  f = "geojson")
 request <- build_url(url)
 USA_States_2017 <- st_read(request)
 ```
@@ -1431,7 +1390,6 @@ So, we come up with the following statement (we will explain the selection of co
 
 ```{r, message = FALSE, warning = FALSE}
 library(dplyr)
-library(data.table)
 library(stringr)
 ```
 
@@ -1529,8 +1487,10 @@ Eurostat even created a nice video on the topic: \url{https://youtu.be/a4Y-hCQ-K
 Now that we have prepared our data, we can extract the data about NUTS 1 and NUTs 2 respectively. At NUTS 1 level the Netherlands is divided into 4 regions ('Landsdelen') and at NUTS 2 level into 12 provinces:
 
 ```{r}
-NL_Regions2017_data <- filter(NL_Regional_Statistics2017, Code %like% "LD")
-NL_Provinces2017_data <- filter(NL_Regional_Statistics2017, Code %like% "PV")
+library(stringr)
+
+NL_Regions2017_data <- filter(NL_Regional_Statistics2017, str_detect(Code, "LD"))
+NL_Provinces2017_data <- filter(NL_Regional_Statistics2017, str_detect(Code, "PV"))
 ```
 
 Please note: these new data frames inherit factor levels from the original data frame from which they are created. Use the **RStudio Environment pane**, to confirm that - for example - the `Name` column of the `NL_Provinces2017_data` table is now a Factor with 770 levels, whereas there are only 12 provinces. So you have to drop unused levels before you can use the new subsets for further analysis:
@@ -1660,7 +1620,7 @@ palette("default")
 Now we will extract the municipalities from `NL_Regional_Statistics2017`.
 
 ```{r}
-NL_Municipalities2017_data <- filter(NL_Regional_Statistics2017, Code %like% "GM")
+NL_Municipalities2017_data <- filter(NL_Regional_Statistics2017, str_detect(Code, "GM"))
 nrow(NL_Municipalities2017_data)
 ```
 Are there `r nrow(NL_Municipalities2017_data)` municipalities in the Netherlands? No, not anymore!
@@ -1692,21 +1652,16 @@ We will access a WFS server to download the municipal geometry - for the year 20
 
 ```{r}
 # NL: Example with Dutch data
+library(httr)
 library(sf)
 library(tmap)
-library(httr)
-library(data.table)
-library(dplyr)
 
-url <- list(hostname = "geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetFeature",
-                         typename = 
-                           "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
-                         outputFormat = "application/json")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl/cbsgebiedsindelingen/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "cbsgebiedsindelingen:cbs_gemeente_2017_gegeneraliseerd",
+                  outputFormat = "application/json")
 request <- build_url(url)
 
 NL_Municipalities2017 <- st_read(request)
@@ -2254,15 +2209,14 @@ We can geocode addresses using Nominatim, a geocoding API for OpenStreetMap.
 ```{r message = FALSE}
 library(dplyr)
 library(httr)
-library(data.table)
 library(jsonlite)
 library(sf)
 
-url <- list(hostname = "nominatim.openstreetmap.org",
-            scheme = "http",
-            path = paste("search", URLencode("Martinikerkhof 3 Groningen"), sep = "/"),
-            query = list(format = "json", adressdetails = 0, limit = 1)) %>% 
-       setattr("class","url")
+url <- parse_url("http://nominatim.openstreetmap.org")
+url$path <- paste("search", URLencode("Martinikerkhof 3 Groningen"), sep = "/")
+url$query <- list(format = "json", 
+                  adressdetails = 0, 
+                  limit = 1)
 request <- build_url(url)
 result <- fromJSON(request) %>% 
           mutate(lat = as.numeric(lat),lon = as.numeric(lon)) %>%
@@ -2292,10 +2246,10 @@ tm_shape(martini_tower) + tm_markers() +
 Let's do some batch geocoding.
 
 ```{r}
-url <- list(hostname = "nominatim.openstreetmap.org",
-            scheme = "http",
-            query = list(format = "json", adressdetails = 0, limit = 1)) %>% 
-       setattr("class","url")
+url <- parse_url("http://nominatim.openstreetmap.org")
+url$query <- list(format = "json", 
+                  adressdetails = 0, 
+                  limit = 1)
 
 geocodeAddress <- function(x){
   url$path <- paste("search", URLencode(x[2]), sep = "/")
@@ -2325,21 +2279,17 @@ There doesn't necessarily has to be a 100% match with the names and adresses in 
 ```{r message = FALSE}
 library(dplyr)
 library(httr)
-library(data.table)
 library(jsonlite)
 library(sf)
 
-url <- list(hostname = "geodata.nationaalgeoregister.nl",
-            scheme = "https",
-            path = paste("locatieserver/v3/free"),
-            query = list(q = "'Martinikerkhof 3 Groningen' and type:adres", rows = 1)) %>% 
-       setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl")
+url$path <- "locatieserver/v3/free"
+url$query <- list(q = "'Martinikerkhof 3 Groningen' and type:adres", rows = 1)
 request <- build_url(url)
 result <- fromJSON(request) 
 martini_tower <- data.frame(addres = result$response$docs$weergavenaam, 
                             wkt = result$response$docs$centroide_rd) %>% 
                  st_as_sf(wkt = 2, crs = 28992)
-
 martini_tower
 ```
 
@@ -2349,11 +2299,9 @@ If we want the coordinates to be in WGS84 (EPSG:4326), we can select `centroide_
 Of course, you can also use Locatieserver for batch geocoding:
 
 ```{r}
-url <- list(hostname = "geodata.nationaalgeoregister.nl",
-            scheme = "https",
-            path = paste("locatieserver/v3/free"),
-            query = list(rows = 1)) %>% 
-       setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl")
+url$path <- "locatieserver/v3/free"
+url$query <- list(rows = 1)
 
 geocodeAddress <- function(x){
   url$query$q <- paste("'", x[2], "'", "and type:adres")
@@ -2427,16 +2375,13 @@ This is the script to build the full `GetFeature` request:
 library(sf)
 library(tmap)
 library(httr)
-library(data.table)
 
-url <- list(hostname = "geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs",
-            scheme = "https",
-            query = list(service = "WFS",
-                         version = "2.0.0",
-                         request = "GetFeature",
-                         typename = "bevolkingskernen2011:cbsbevolkingskernen2011",
-                         outputFormat = "application/json")) %>% 
-       setattr("class","url")
+url <- parse_url("https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs")
+url$query <- list(service = "WFS",
+                  version = "2.0.0",
+                  request = "GetFeature",
+                  typename = "bevolkingskernen2011:cbsbevolkingskernen2011",
+                  outputFormat = "application/json")
 request <- build_url(url)
 ```
 The variable `request` will now contain this [link](https://geodata.nationaalgeoregister.nl/bevolkingskernen2011/wfs/?service=WFS&version=2.0.0&request=GetFeature&typename=bevolkingskernen2011%3Acbsbevolkingskernen2011&outputFormat=application%2Fjson). (When you click this link the server response will be shown in your browser in GeoJSON format.)
